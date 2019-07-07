@@ -224,19 +224,12 @@ fn dice(input: &str) -> IResult<&str, Expression> {
 /// println!("{}", roll_dice(dice_expression)?);
 /// # Ok::<(), RollError>(())
 /// ```
-/// Providing input that will overflow an `i64`
-/// will produce unexpected behavior,
-/// though it should never panic.
 ///
 /// An `Err` is returned in the following cases:
 ///   - A d0 is used
 ///   - The sum of all terms is too high
 ///   - The sum of all terms is too low
 ///   - Nonsense input
-///
-/// If a number >= 9223372036854775808 (2^63) is given,
-/// it is replaced, prior to evaluation, with 1.
-/// This is considered a bug, and will change in a future release.
 pub fn roll_dice(input: &str) -> Result<i64, RollError> {
     let (input, e) = match dice(input.trim()) {
         Ok(x) => x,
