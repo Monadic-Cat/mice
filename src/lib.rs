@@ -14,9 +14,9 @@ use nom::{
     IResult,
 };
 use rand::{thread_rng, Rng};
+use std::error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
-use std::error::Error;
 
 #[derive(Debug)]
 pub enum RollError {
@@ -32,20 +32,17 @@ pub enum RollError {
 impl Display for RollError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            RollError::InvalidDie =>
-                write!(f, "Invalid die"),
-            RollError::OverflowPositive =>
-                write!(f, "sum is too high for `i64`"),
-            RollError::OverflowNegative =>
-                write!(f, "sum is too low for `i64`"),
-            RollError::InvalidExpression =>
-                write!(f, "you've specified an invalid dice expression."),
+            RollError::InvalidDie => write!(f, "Invalid die"),
+            RollError::OverflowPositive => write!(f, "sum is too high for `i64`"),
+            RollError::OverflowNegative => write!(f, "sum is too low for `i64`"),
+            RollError::InvalidExpression => {
+                write!(f, "you've specified an invalid dice expression.")
+            }
         }
     }
 }
 
 impl Error for RollError {}
-
 
 #[derive(Debug)]
 struct Die {
@@ -109,14 +106,18 @@ fn eval_dice(a: Expression) -> Result<i64, RollError> {
             Term::Constant(x) => x as i64,
         };
         match expr.sign {
-            Sign::Positive => sum = match sum.checked_add(total) {
-                Some(x) => x,
-                None => return Err(RollError::OverflowPositive),
-            },
-            Sign::Negative => sum = match sum.checked_sub(total) {
-                Some(x) => x,
-                None => return Err(RollError::OverflowNegative),
-            },
+            Sign::Positive => {
+                sum = match sum.checked_add(total) {
+                    Some(x) => x,
+                    None => return Err(RollError::OverflowPositive),
+                }
+            }
+            Sign::Negative => {
+                sum = match sum.checked_sub(total) {
+                    Some(x) => x,
+                    None => return Err(RollError::OverflowNegative),
+                }
+            }
         }
     }
     Ok(sum)
@@ -131,7 +132,13 @@ fn integer(input: &str) -> IResult<&str, u64> {
     let i = match int.parse::<i64>() {
         // The only error possible here is
         // integer overflow.
-        Err(_) => 1,
+        // This should emit a nom Failure
+        Err(_) => {
+            return Err(nom::Err::<(&str, nom::error::ErrorKind)>::Failure((
+                input,
+                nom::error::ErrorKind::TooLarge,
+            )))
+        }
         Ok(x) => x as u64,
     };
     Ok((input, i))
@@ -172,9 +179,7 @@ fn whitespace(input: &str) -> IResult<&str, &str> {
 }
 
 fn separator(input: &str) -> IResult<&str, Sign> {
-    let (input, t) = tuple((many0(whitespace),
-                            operator,
-                            many0(whitespace)))(input)?;
+    let (input, t) = tuple((many0(whitespace), operator, many0(whitespace)))(input)?;
     Ok((input, t.1))
 }
 
@@ -189,11 +194,7 @@ fn term(input: &str) -> IResult<&str, Term> {
 
 fn dice(input: &str) -> IResult<&str, Expression> {
     // [(+/-)] die ((+/-) die)*
-    let (input, s) = tuple((
-        opt(separator),
-        term,
-        many0(tuple((separator, term))),
-    ))(input)?;
+    let (input, s) = tuple((opt(separator), term, many0(tuple((separator, term)))))(input)?;
     let mut expression = Expression {
         exprs: vec![Expr {
             term: s.1,
@@ -253,4 +254,3 @@ pub fn roll_dice(input: &str) -> Result<i64, RollError> {
 // dN1   (+/-) N2
 // N1dN2 (+/-) N3
 // N1dN2 (+/-) N3dN4 (+/-) [...] (+/-) NN
-
