@@ -1,0 +1,10 @@
+[package]
+name = "mice"
+version = "0.1.0"
+authors = ["Monadic Cat <greenmonadcat@gmail.com>"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+
+[dependencies]
+nom = "5.0.0"
+rand = "0.7.0"
