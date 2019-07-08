@@ -98,9 +98,19 @@ fn eval_dice(a: Expression) -> Result<i64, RollError> {
                 } else if x.size < 1 {
                     return Err(RollError::InvalidDie);
                 } else {
-                    (0..x.number)
-                        .map(|_| rng.gen_range(1u64, x.size))
-                        .fold(0, |a, x| a + x as i64)
+                    let mut acc: i64 = 0;
+                    for n in (0..x.number).map(|_| rng.gen_range(1u64, x.size)) {
+                        acc = match acc.checked_add(n as i64) {
+                            Some(x) => x,
+                            None => {
+                                return Err(match expr.sign {
+                                    Sign::Positive => RollError::OverflowPositive,
+                                    Sign::Negative => RollError::OverflowNegative,
+                                })
+                            }
+                        }
+                    }
+                    acc
                 }
             }
             Term::Constant(x) => x as i64,
