@@ -17,6 +17,7 @@ use rand::{thread_rng, Rng};
 use std::error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
+// use wasm_bindgen::prelude::*;
 
 #[derive(Debug)]
 pub enum RollError {
@@ -223,6 +224,20 @@ fn dice(input: &str) -> IResult<&str, Expression> {
     Ok((input, expression))
 }
 
+/// Wrap up getting errors from parsing a dice expression.
+fn wrap_dice(input: &str) -> Result<Expression, RollError> {
+    let (input, e) = match dice(input.trim()) {
+        Ok(x) => x,
+        Err(_) => return Err(RollError::InvalidExpression),
+    };
+    // Prevent weirdness like "10dlol" => 10
+    if !input.is_empty() {
+        Err(RollError::InvalidExpression)
+    } else {
+        Ok(e)
+    }
+}
+
 // This is the one and only output of the library.
 /// Evaluate a dice expression!
 /// This function takes the usual dice expression format,
@@ -241,17 +256,67 @@ fn dice(input: &str) -> IResult<&str, Expression> {
 ///   - The sum of all terms is too low
 ///   - Nonsense input
 pub fn roll_dice(input: &str) -> Result<i64, RollError> {
-    let (input, e) = match dice(input.trim()) {
-        Ok(x) => x,
-        Err(_) => return Err(RollError::InvalidExpression),
-    };
-    // Prevent weirdness like "10dlol" => 10
-    if !input.is_empty() {
-        Err(RollError::InvalidExpression)
-    } else {
-        eval_dice(e)
+    match wrap_dice(input) {
+        Ok(x) => Ok(eval_dice(x)?),
+        Err(x) => Err(x),
     }
 }
+
+/// Get an iterator of tuples of the form:
+/// (number of dice, number of faces)
+///
+/// Constant terms are expressed in the form: (value, 1)
+///
+/// There is no guarantee of the order of terms.
+///
+/// The only possible error here is `RollError::InvalidExpression`.
+/// Other errors may be encountered in this function's complement:
+/// `roll_iter`.
+pub fn dice_iter(input: &str) -> Result<impl Iterator<Item = (i64, u64)>, RollError> {
+    let e = wrap_dice(input)?;
+    Ok(e.exprs.into_iter().map(|x| {
+        let t = match x.term {
+            Term::Die(x) => (x.number as i64, x.size),
+            Term::Constant(x) => (x as i64, 1),
+        };
+        match x.sign {
+            Sign::Positive => t,
+            Sign::Negative => (-t.0, t.1),
+        }
+    }))
+}
+pub fn roll_iter<'a, I>(input: I) -> Result<i64, RollError>
+where
+    I: Iterator<Item = &'a (i64, u64)>,
+{
+    eval_dice(Expression {
+        exprs: input.map(|x| {
+            let (mut n, s) = x;
+            let sign = if n < 0 {
+                n = -n;
+                Sign::Negative
+            } else {
+                Sign::Positive
+            };
+            Expr {
+                term: Term::Die(Die {
+                    number: n as u64,
+                    size: *s,
+                }),
+                sign,
+            }
+        }).collect(),
+    })
+}
+
+// /// JavaScript binding for `roll_dice`.
+// #[wasm_bindgen]
+// pub fn roll(input: &str) -> Result<i64, JsValue> {
+//     match roll_dice(input) {
+//         Ok(x) => Ok(x),
+//         Err(x) => Err(JsValue::from_str(&format!("{}", x))),
+//     }
+// }
 
 // N
 // dN1   (+/-) N2
