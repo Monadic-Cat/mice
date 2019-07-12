@@ -14,6 +14,7 @@ use nom::{
     IResult,
 };
 use rand::{thread_rng, Rng};
+use std::convert::TryInto;
 use std::error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
@@ -30,6 +31,7 @@ pub enum RollError {
     /// The expression evaluated isn't a valid dice expression
     InvalidExpression,
 }
+
 impl Display for RollError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
@@ -83,55 +85,85 @@ struct Expr {
     sign: Sign,
 }
 
-#[derive(Debug)]
-struct Expression {
-    exprs: Vec<Expr>,
-}
+type Expression = Vec<Expr>;
 
-fn eval_dice(a: Expression) -> Result<i64, RollError> {
-    let mut rng = thread_rng();
-    let mut sum: i64 = 0;
-    for expr in a.exprs {
-        let total = match expr.term {
-            Term::Die(x) => {
-                if x.size == 1 {
-                    x.number as i64 // This is correct.
-                } else if x.size < 1 {
-                    return Err(RollError::InvalidDie);
-                } else {
-                    let mut acc: i64 = 0;
-                    for n in (0..x.number).map(|_| rng.gen_range(1u64, x.size)) {
-                        acc = match acc.checked_add(n as i64) {
-                            Some(x) => x,
-                            None => {
-                                return Err(match expr.sign {
-                                    Sign::Positive => RollError::OverflowPositive,
-                                    Sign::Negative => RollError::OverflowNegative,
-                                })
-                            }
-                        }
-                    }
-                    acc
-                }
-            }
-            Term::Constant(x) => x as i64,
-        };
-        match expr.sign {
-            Sign::Positive => {
-                sum = match sum.checked_add(total) {
-                    Some(x) => x,
-                    None => return Err(RollError::OverflowPositive),
-                }
-            }
-            Sign::Negative => {
-                sum = match sum.checked_sub(total) {
-                    Some(x) => x,
-                    None => return Err(RollError::OverflowNegative),
-                }
+fn roll_die_with<R>(a: Die, rng: &mut R) -> Result<u64, RollError>
+where
+    R: Rng,
+{
+    if a.size == 1 {
+        Ok(a.number)
+    } else if a.size < 1 {
+        Err(RollError::InvalidDie)
+    } else {
+        let mut acc: u64 = 0;
+        for n in (0..a.number).map(|_| rng.gen_range(1, a.size)) {
+            acc = match acc.checked_add(n) {
+                Some(x) => x,
+                None => return Err(RollError::OverflowPositive),
             }
         }
+        Ok(acc)
     }
-    Ok(sum)
+}
+
+fn eval_term_with<R>(a: Expr, rng: &mut R) -> Result<i64, RollError>
+where
+    R: Rng,
+{
+    let t = match a.term {
+        Term::Die(x) => roll_die_with(x, rng),
+        Term::Constant(x) => Ok(x),
+    };
+    let p = match a.sign {
+        Sign::Positive => match t {
+            x => x,
+        },
+        Sign::Negative => match t {
+            Ok(x) => Ok(x),
+            Err(e) => match e {
+                RollError::OverflowPositive => Err(RollError::OverflowNegative),
+                x => Err(x),
+            },
+        },
+    };
+    match p {
+        Ok(x) => match x.try_into() {
+            Ok(x) => Ok(x),
+            Err(_) => Err(RollError::OverflowPositive),
+        },
+        Err(x) => Err(x),
+    }
+}
+
+fn sum_result_iter<I>(a: I) -> Result<i64, RollError>
+where
+    I: Iterator<Item = Result<i64, RollError>>,
+{
+    a.fold(Ok(0), |a, t| {
+        let t = match t {
+            Ok(x) => x,
+            Err(x) => return Err(x),
+        };
+        match a {
+            Ok(x) => match x.checked_add(t) {
+                Some(x) => Ok(x),
+                None => {
+                    if t > 0 {
+                        Err(RollError::OverflowPositive)
+                    } else {
+                        Err(RollError::OverflowNegative)
+                    }
+                }
+            },
+            Err(x) => Err(x),
+        }
+    })
+}
+
+fn sum_terms(a: Vec<Expr>) -> Result<i64, RollError> {
+    let mut rng = thread_rng();
+    sum_result_iter(a.into_iter().map(|x| eval_term_with(x, &mut rng)))
 }
 
 fn is_dec_digit(c: char) -> bool {
@@ -206,17 +238,15 @@ fn term(input: &str) -> IResult<&str, Term> {
 fn dice(input: &str) -> IResult<&str, Expression> {
     // [(+/-)] die ((+/-) die)*
     let (input, s) = tuple((opt(separator), term, many0(tuple((separator, term)))))(input)?;
-    let mut expression = Expression {
-        exprs: vec![Expr {
-            term: s.1,
-            sign: match s.0 {
-                Some(x) => x,
-                None => Sign::Positive,
-            },
-        }],
-    };
+    let mut expression = vec![Expr {
+        term: s.1,
+        sign: match s.0 {
+            Some(x) => x,
+            None => Sign::Positive,
+        },
+    }];
     for t in s.2 {
-        expression.exprs.push(Expr {
+        expression.push(Expr {
             term: t.1,
             sign: t.0,
         });
@@ -238,7 +268,6 @@ fn wrap_dice(input: &str) -> Result<Expression, RollError> {
     }
 }
 
-// This is the one and only output of the library.
 /// Evaluate a dice expression!
 /// This function takes the usual dice expression format,
 /// and allows an arbitrary number of terms.
@@ -257,7 +286,7 @@ fn wrap_dice(input: &str) -> Result<Expression, RollError> {
 ///   - Nonsense input
 pub fn roll_dice(input: &str) -> Result<i64, RollError> {
     match wrap_dice(input) {
-        Ok(x) => Ok(eval_dice(x)?),
+        Ok(x) => Ok(sum_terms(x)?),
         Err(x) => Err(x),
     }
 }
@@ -271,42 +300,49 @@ pub fn roll_dice(input: &str) -> Result<i64, RollError> {
 ///
 /// The only possible error here is `RollError::InvalidExpression`.
 /// Other errors may be encountered in this function's complement:
-/// `roll_iter`.
-pub fn dice_iter(input: &str) -> Result<impl Iterator<Item = (i64, u64)>, RollError> {
+/// `roll_vec`.
+pub fn dice_vec(input: &str) -> Result<Vec<(i64, u64)>, RollError> {
     let e = wrap_dice(input)?;
-    Ok(e.exprs.into_iter().map(|x| {
-        let t = match x.term {
-            Term::Die(x) => (x.number as i64, x.size),
-            Term::Constant(x) => (x as i64, 1),
-        };
-        match x.sign {
-            Sign::Positive => t,
-            Sign::Negative => (-t.0, t.1),
-        }
-    }))
+    Ok(e.into_iter()
+        .map(|x| {
+            let t = match x.term {
+                Term::Die(x) => (x.number as i64, x.size),
+                Term::Constant(x) => (x as i64, 1),
+            };
+            match x.sign {
+                Sign::Positive => t,
+                Sign::Negative => (-t.0, t.1),
+            }
+        })
+        .collect())
 }
-pub fn roll_iter<'a, I>(input: I) -> Result<i64, RollError>
+fn roll_iter<'a, I>(input: I) -> Result<i64, RollError>
 where
     I: Iterator<Item = &'a (i64, u64)>,
 {
-    eval_dice(Expression {
-        exprs: input.map(|x| {
-            let (mut n, s) = x;
-            let sign = if n < 0 {
-                n = -n;
-                Sign::Negative
-            } else {
-                Sign::Positive
-            };
-            Expr {
-                term: Term::Die(Die {
-                    number: n as u64,
-                    size: *s,
-                }),
-                sign,
-            }
-        }).collect(),
-    })
+    sum_terms(
+        input
+            .map(|x| {
+                let (mut n, s) = x;
+                let sign = if n < 0 {
+                    n = -n;
+                    Sign::Negative
+                } else {
+                    Sign::Positive
+                };
+                Expr {
+                    term: Term::Die(Die {
+                        number: n as u64,
+                        size: *s,
+                    }),
+                    sign,
+                }
+            })
+            .collect(),
+    )
+}
+pub fn roll_vec(input: &Vec<(i64, u64)>) -> Result<i64, RollError> {
+    roll_iter(input.iter())
 }
 
 // /// JavaScript binding for `roll_dice`.
