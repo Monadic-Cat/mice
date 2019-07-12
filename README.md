@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Monadic-Cat/mice.svg?branch=master)](https://travis-ci.org/Monadic-Cat/mice)
+
 # mice, messing with dice
 
 This is a simple crate for evaluating dice expressions.
