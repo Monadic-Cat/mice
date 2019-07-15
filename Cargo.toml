@@ -1,6 +1,6 @@
 [package]
 name = "mice"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Monadic Cat <greenmonadcat@gmail.com>"]
 repository = "https://github.com/Monadic-Cat/mice"
 description = "messing with dice"
