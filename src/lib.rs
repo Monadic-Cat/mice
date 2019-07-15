@@ -5,20 +5,14 @@
 //! usage, and will likely obtain extensions related
 //! to games that I play.
 #![forbid(unsafe_code)]
-use nom::{
-    branch::alt,
-    bytes::complete::{tag, take_while1},
-    combinator::opt,
-    multi::many0,
-    sequence::tuple,
-    IResult,
-};
 use rand::{thread_rng, Rng};
 use std::convert::TryInto;
 use std::error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
 // use wasm_bindgen::prelude::*;
+mod parse;
+use parse::{wrap_dice, Die, Expr, ParseError, Sign, TResult, Term};
 
 #[derive(Debug)]
 pub enum RollError {
@@ -30,6 +24,13 @@ pub enum RollError {
     OverflowNegative,
     /// The expression evaluated isn't a valid dice expression
     InvalidExpression,
+}
+impl From<ParseError> for RollError {
+    fn from(e: ParseError) -> Self {
+        match e {
+            ParseError::InvalidExpression => RollError::InvalidExpression,
+        }
+    }
 }
 
 impl Display for RollError {
@@ -44,48 +45,7 @@ impl Display for RollError {
         }
     }
 }
-
 impl Error for RollError {}
-
-#[derive(Debug)]
-struct Die {
-    number: u64,
-    size: u64,
-}
-impl Die {
-    #[allow(dead_code)]
-    fn new(number: u64, size: u64) -> Result<Die, RollError> {
-        // u64 type constraint means
-        // we don't need to check if number < 0
-        // Forbid d0. d1 is weird, but it
-        // has a correct interpretation.
-        if size < 1 {
-            Err(RollError::InvalidDie)
-        } else {
-            Ok(Die { number, size })
-        }
-    }
-}
-
-#[derive(Debug)]
-enum Term {
-    Die(Die),
-    Constant(u64),
-}
-
-#[derive(Debug)]
-enum Sign {
-    Positive,
-    Negative,
-}
-
-#[derive(Debug)]
-struct Expr {
-    term: Term,
-    sign: Sign,
-}
-
-type Expression = Vec<Expr>;
 
 fn roll_die_with<R>(a: Die, rng: &mut R) -> Result<u64, RollError>
 where
@@ -107,7 +67,7 @@ where
     }
 }
 
-fn eval_term_with<R>(a: Expr, rng: &mut R) -> Result<i64, RollError>
+fn eval_term_with<R>(a: Expr, rng: &mut R) -> TResult
 where
     R: Rng,
 {
@@ -136,9 +96,9 @@ where
     }
 }
 
-fn sum_result_iter<I>(a: I) -> Result<i64, RollError>
+fn sum_result_iter<I>(a: I) -> TResult
 where
-    I: Iterator<Item = Result<i64, RollError>>,
+    I: Iterator<Item = TResult>,
 {
     a.fold(Ok(0), |a, t| {
         let t = match t {
@@ -161,111 +121,16 @@ where
     })
 }
 
-fn sum_terms(a: Vec<Expr>) -> Result<i64, RollError> {
+fn eval_iter<I>(a: I) -> impl Iterator<Item = TResult>
+where
+    I: Iterator<Item = Expr>,
+{
     let mut rng = thread_rng();
-    sum_result_iter(a.into_iter().map(|x| eval_term_with(x, &mut rng)))
+    a.map(move |x| eval_term_with(x, &mut rng))
 }
 
-fn is_dec_digit(c: char) -> bool {
-    c.is_digit(10)
-}
-fn integer(input: &str) -> IResult<&str, u64> {
-    let (input, int) = take_while1(is_dec_digit)(input)?;
-    // Pretend to be a 63 bit unsigned integer.
-    let i = match int.parse::<i64>() {
-        // The only error possible here is
-        // integer overflow.
-        // This should emit a nom Failure
-        Err(_) => {
-            return Err(nom::Err::<(&str, nom::error::ErrorKind)>::Failure((
-                input,
-                nom::error::ErrorKind::TooLarge,
-            )))
-        }
-        Ok(x) => x as u64,
-    };
-    Ok((input, i))
-}
-
-fn die(input: &str) -> IResult<&str, Term> {
-    // number of dice : [integer]
-    // separator      : "d"
-    // size of dice   : integer
-    let (input, d) = tuple((opt(integer), tag("d"), integer))(input)?;
-    Ok((
-        input,
-        Term::Die(Die {
-            number: match d.0 {
-                Some(x) => x,
-                None => 1,
-            },
-            size: d.2,
-        }),
-    ))
-}
-
-fn addition(input: &str) -> IResult<&str, Sign> {
-    let (input, _) = tag("+")(input)?;
-    Ok((input, Sign::Positive))
-}
-fn subtraction(input: &str) -> IResult<&str, Sign> {
-    let (input, _) = tag("-")(input)?;
-    Ok((input, Sign::Negative))
-}
-
-fn operator(input: &str) -> IResult<&str, Sign> {
-    alt((addition, subtraction))(input)
-}
-
-fn whitespace(input: &str) -> IResult<&str, &str> {
-    alt((tag(" "), tag("\t")))(input)
-}
-
-fn separator(input: &str) -> IResult<&str, Sign> {
-    let (input, t) = tuple((many0(whitespace), operator, many0(whitespace)))(input)?;
-    Ok((input, t.1))
-}
-
-fn constant(input: &str) -> IResult<&str, Term> {
-    let i = integer(input)?;
-    Ok((i.0, Term::Constant(i.1)))
-}
-
-fn term(input: &str) -> IResult<&str, Term> {
-    alt((die, constant))(input)
-}
-
-fn dice(input: &str) -> IResult<&str, Expression> {
-    // [(+/-)] die ((+/-) die)*
-    let (input, s) = tuple((opt(separator), term, many0(tuple((separator, term)))))(input)?;
-    let mut expression = vec![Expr {
-        term: s.1,
-        sign: match s.0 {
-            Some(x) => x,
-            None => Sign::Positive,
-        },
-    }];
-    for t in s.2 {
-        expression.push(Expr {
-            term: t.1,
-            sign: t.0,
-        });
-    }
-    Ok((input, expression))
-}
-
-/// Wrap up getting errors from parsing a dice expression.
-fn wrap_dice(input: &str) -> Result<Expression, RollError> {
-    let (input, e) = match dice(input.trim()) {
-        Ok(x) => x,
-        Err(_) => return Err(RollError::InvalidExpression),
-    };
-    // Prevent weirdness like "10dlol" => 10
-    if !input.is_empty() {
-        Err(RollError::InvalidExpression)
-    } else {
-        Ok(e)
-    }
+fn sum_terms(a: Vec<Expr>) -> TResult {
+    sum_result_iter(eval_iter(a.into_iter()))
 }
 
 /// Evaluate a dice expression!
@@ -287,11 +152,11 @@ fn wrap_dice(input: &str) -> Result<Expression, RollError> {
 pub fn roll_dice(input: &str) -> Result<i64, RollError> {
     match wrap_dice(input) {
         Ok(x) => Ok(sum_terms(x)?),
-        Err(x) => Err(x),
+        Err(x) => Err(RollError::from(x)),
     }
 }
 
-/// Get an iterator of tuples of the form:
+/// Get a `Vec` of tuples of the form:
 /// (number of dice, number of faces)
 ///
 /// Constant terms are expressed in the form: (value, 1)
@@ -316,7 +181,8 @@ pub fn dice_vec(input: &str) -> Result<Vec<(i64, u64)>, RollError> {
         })
         .collect())
 }
-fn roll_iter<'a, I>(input: I) -> Result<i64, RollError>
+
+fn roll_iter<'a, I>(input: I) -> TResult
 where
     I: Iterator<Item = &'a (i64, u64)>,
 {
@@ -341,7 +207,9 @@ where
             .collect(),
     )
 }
-pub fn roll_vec(input: &Vec<(i64, u64)>) -> Result<i64, RollError> {
+/// Roll and sum a `Vec` of tuples, in the form
+/// provided by this function's complement: `dice_vec`
+pub fn roll_vec(input: &Vec<(i64, u64)>) -> TResult {
     roll_iter(input.iter())
 }
 
