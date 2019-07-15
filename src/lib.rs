@@ -96,6 +96,9 @@ where
     }
 }
 
+/// Add together all `TResult`s from an Iterator,
+/// returning either an `i64` or the first
+/// error encountered. (e.g., `Ok(i64)` or `Err(RollError)`)
 fn sum_result_iter<I>(a: I) -> TResult
 where
     I: Iterator<Item = TResult>,
@@ -156,6 +159,8 @@ pub fn roll_dice(input: &str) -> Result<i64, RollError> {
     }
 }
 
+type ExprTuple = (i64, u64);
+
 /// Get a `Vec` of tuples of the form:
 /// (number of dice, number of faces)
 ///
@@ -166,50 +171,51 @@ pub fn roll_dice(input: &str) -> Result<i64, RollError> {
 /// The only possible error here is `RollError::InvalidExpression`.
 /// Other errors may be encountered in this function's complement:
 /// `roll_vec`.
-pub fn dice_vec(input: &str) -> Result<Vec<(i64, u64)>, RollError> {
+pub fn dice_vec(input: &str) -> Result<Vec<ExprTuple>, RollError> {
     let e = wrap_dice(input)?;
-    Ok(e.into_iter()
-        .map(|x| {
-            let t = match x.term {
-                Term::Die(x) => (x.number as i64, x.size),
-                Term::Constant(x) => (x as i64, 1),
-            };
-            match x.sign {
-                Sign::Positive => t,
-                Sign::Negative => (-t.0, t.1),
-            }
-        })
-        .collect())
+    Ok(e.into_iter().map(|x| x.into()).collect())
+}
+
+impl From<ExprTuple> for Expr {
+    fn from(tup: ExprTuple) -> Self {
+        let (mut n, s) = tup;
+        let sign = if n < 0 {
+            n = -n;
+            Sign::Negative
+        } else {
+            Sign::Positive
+        };
+        Self {
+            term: Term::Die(Die {
+                number: n as u64,
+                size: s,
+            }),
+            sign,
+        }
+    }
+}
+impl From<Expr> for ExprTuple {
+    fn from(e: Expr) -> ExprTuple {
+        let t = match e.term {
+            Term::Die(x) => (x.number as i64, x.size),
+            Term::Constant(x) => (x as i64, 1),
+        };
+        match e.sign {
+            Sign::Positive => t,
+            Sign::Negative => (-t.0, t.1),
+        }
+    }
 }
 
 fn roll_iter<'a, I>(input: I) -> TResult
 where
-    I: Iterator<Item = &'a (i64, u64)>,
+    I: Iterator<Item = &'a ExprTuple>,
 {
-    sum_terms(
-        input
-            .map(|x| {
-                let (mut n, s) = x;
-                let sign = if n < 0 {
-                    n = -n;
-                    Sign::Negative
-                } else {
-                    Sign::Positive
-                };
-                Expr {
-                    term: Term::Die(Die {
-                        number: n as u64,
-                        size: *s,
-                    }),
-                    sign,
-                }
-            })
-            .collect(),
-    )
+    sum_terms(input.map(|x| Expr::from(*x)).collect())
 }
 /// Roll and sum a `Vec` of tuples, in the form
 /// provided by this function's complement: `dice_vec`
-pub fn roll_vec(input: &Vec<(i64, u64)>) -> TResult {
+pub fn roll_vec(input: &Vec<ExprTuple>) -> TResult {
     roll_iter(input.iter())
 }
 
