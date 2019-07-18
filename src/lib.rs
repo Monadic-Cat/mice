@@ -137,7 +137,6 @@ where
 }
 
 fn sum_terms(a: Vec<Expr>) -> TResult {
-    println!("{:#?}", a);
     sum_result_iter(eval_iter(a.into_iter()))
 }
 
