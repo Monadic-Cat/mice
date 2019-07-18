@@ -13,7 +13,7 @@ use std::fmt::Formatter;
 // use wasm_bindgen::prelude::*;
 mod parse;
 use parse::{wrap_dice, Die, Expr, ParseError, Sign, TResult, Term};
-pub mod util;
+mod util;
 
 #[derive(Debug, Clone, Copy)]
 pub enum RollError {
@@ -90,7 +90,10 @@ where
     };
     match p {
         Ok(x) => match x.try_into() {
-            Ok(x) => Ok(x),
+            Ok(x) => match a.sign {
+                Sign::Positive => Ok(x),
+                Sign::Negative => Ok(-x),
+            },
             Err(_) => Err(RollError::OverflowPositive),
         },
         Err(x) => Err(x),
@@ -134,6 +137,7 @@ where
 }
 
 fn sum_terms(a: Vec<Expr>) -> TResult {
+    println!("{:#?}", a);
     sum_result_iter(eval_iter(a.into_iter()))
 }
 
@@ -233,3 +237,13 @@ pub fn roll_vec(input: &Vec<ExprTuple>) -> TResult {
 // dN1   (+/-) N2
 // N1dN2 (+/-) N3
 // N1dN2 (+/-) N3dN4 (+/-) [...] (+/-) NN
+
+#[cfg(test)]
+mod test {
+    use crate::roll_dice;
+    #[test]
+    fn arithmetic() {
+        assert_eq!(roll_dice("5 + 3").unwrap(), 8);
+        assert_eq!(roll_dice("5 - 3").unwrap(), 2);
+    }
+}
