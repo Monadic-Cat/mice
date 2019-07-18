@@ -13,8 +13,9 @@ use std::fmt::Formatter;
 // use wasm_bindgen::prelude::*;
 mod parse;
 use parse::{wrap_dice, Die, Expr, ParseError, Sign, TResult, Term};
+pub mod util;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum RollError {
     /// This indicates the usage of a d0
     InvalidDie,

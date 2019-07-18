@@ -8,7 +8,7 @@ use nom::{
     IResult,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) enum ParseError {
     InvalidExpression,
 }
@@ -23,7 +23,7 @@ impl std::fmt::Display for ParseError {
 }
 impl std::error::Error for ParseError {}
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) struct Die {
     pub(crate) number: u64,
     pub(crate) size: u64,
@@ -43,19 +43,19 @@ impl Die {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) enum Term {
     Die(Die),
     Constant(u64),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) enum Sign {
     Positive,
     Negative,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) struct Expr {
     pub(crate) term: Term,
     pub(crate) sign: Sign,
