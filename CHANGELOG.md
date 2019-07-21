@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
  - Providing nicely formatted result strings via `util::roll_vec_nice`.
+ - Evaluating an expression string with a term
+   limit via `util::roll_capped_nice`.
 
 ## [0.1.6] - 2019-07-18
 ### Fixed

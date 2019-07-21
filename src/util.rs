@@ -37,3 +37,28 @@ pub fn roll_vec_nice(input: &Vec<ExprTuple>) -> Result<String, RollError> {
     }
     Ok(nice_string)
 }
+
+/// For providing access to mice to irresponsible users
+pub fn roll_capped_nice(input: &str, cap: i64) -> Result<String, &'static str> {
+    let dice: Vec<(i64, u64)> = crate::dice_vec(input)?;
+    let mut roll_count = 0;
+    for d in dice.iter() {
+        if d.1 > 1 {
+            roll_count += d.0;
+        } else {
+            // This branch only saves time
+            // in the worst case - when there's
+            // a truly obscene number of terms.
+            roll_count += 1;
+        }
+        // Prevent worst case performance
+        if roll_count > cap {
+            break;
+        }
+    }
+    if roll_count > cap {
+        Err("tried to DOS me.")
+    } else {
+        roll_vec_nice(&dice)
+    }
+}
