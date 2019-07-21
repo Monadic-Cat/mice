@@ -25,6 +25,8 @@ pub enum RollError {
     OverflowNegative,
     /// The expression evaluated isn't a valid dice expression
     InvalidExpression,
+    /// Miscellaneous error type. Only use in unstable APIs.
+    MiscError { description: &'static str },
 }
 impl From<ParseError> for RollError {
     fn from(e: ParseError) -> Self {
@@ -43,6 +45,7 @@ impl Display for RollError {
             RollError::InvalidExpression => {
                 write!(f, "you've specified an invalid dice expression.")
             }
+            RollError::MiscError { description: x } => write!(f, "{}", x),
         }
     }
 }
