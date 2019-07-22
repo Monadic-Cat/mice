@@ -48,7 +48,7 @@ impl Display for RollError {
 }
 impl Error for RollError {}
 
-fn roll_die_with<R>(a: Die, rng: &mut R) -> Result<u64, RollError>
+fn roll_die_with<R>(a: &Die, rng: &mut R) -> Result<u64, RollError>
 where
     R: Rng,
 {
@@ -68,12 +68,12 @@ where
     }
 }
 
-fn eval_term_with<R>(a: Expr, rng: &mut R) -> TResult
+fn eval_term_with<R>(a: &Expr, rng: &mut R) -> TResult
 where
     R: Rng,
 {
     let t = match a.term {
-        Term::Die(x) => roll_die_with(x, rng),
+        Term::Die(x) => roll_die_with(&x, rng),
         Term::Constant(x) => Ok(x),
     };
     let p = match a.sign {
@@ -133,7 +133,7 @@ where
     I: Iterator<Item = Expr>,
 {
     let mut rng = thread_rng();
-    a.map(move |x| eval_term_with(x, &mut rng))
+    a.map(move |x| eval_term_with(&x, &mut rng))
 }
 
 fn sum_terms(a: Vec<Expr>) -> TResult {
