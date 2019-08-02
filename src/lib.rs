@@ -160,46 +160,6 @@ where
     }
 }
 
-/// Add together all `TResult`s from an Iterator,
-/// returning either an `i64` or the first
-/// error encountered. (e.g., `Ok(i64)` or `Err(RollError)`)
-fn sum_result_iter<I>(a: I) -> TResult
-where
-    I: Iterator<Item = TResult>,
-{
-    a.fold(Ok(0), |a, t| {
-        let t = match t {
-            Ok(x) => x,
-            Err(x) => return Err(x),
-        };
-        match a {
-            Ok(x) => match x.checked_add(t) {
-                Some(x) => Ok(x),
-                None => {
-                    if t > 0 {
-                        Err(RollError::OverflowPositive)
-                    } else {
-                        Err(RollError::OverflowNegative)
-                    }
-                }
-            },
-            Err(x) => Err(x),
-        }
-    })
-}
-
-fn eval_iter<I>(a: I) -> impl Iterator<Item = TResult>
-where
-    I: Iterator<Item = Expr>,
-{
-    let mut rng = thread_rng();
-    a.map(move |x| eval_term_with(&x, &mut rng))
-}
-
-fn sum_terms(a: Vec<Expr>) -> TResult {
-    sum_result_iter(eval_iter(a.into_iter()))
-}
-
 /// Evaluate a dice expression!
 /// This function takes the usual dice expression format,
 /// and allows an arbitrary number of terms.
