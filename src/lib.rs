@@ -57,7 +57,7 @@ impl Display for ExpressionResult {
             let mut iter = self.pairs.iter();
             // Keep unwrap local so I can see *why* it's safe.
             // It will be easier to remove later if I change
-            // the above. Additionally, make results immutable.
+            // the above.
             let first = iter.next().unwrap();
             nstr.push_str(&format!("{} -> {}",
                                    first.0,
