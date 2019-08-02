@@ -13,6 +13,7 @@ use std::fmt::Formatter;
 // use wasm_bindgen::prelude::*;
 mod parse;
 use parse::{wrap_dice, Die, Expr, ParseError, Sign, Term};
+pub mod util;
 
 pub(crate) type TResult = Result<i64, RollError>;
 
@@ -78,8 +79,6 @@ pub enum RollError {
     OverflowNegative,
     /// The expression evaluated isn't a valid dice expression
     InvalidExpression,
-    /// Miscellaneous error type. Only use in unstable APIs.
-    MiscError { description: &'static str },
 }
 impl From<ParseError> for RollError {
     fn from(e: ParseError) -> Self {
@@ -98,7 +97,6 @@ impl Display for RollError {
             RollError::InvalidExpression => {
                 write!(f, "you've specified an invalid dice expression.")
             }
-            RollError::MiscError { description: x } => write!(f, "{}", x),
         }
     }
 }
