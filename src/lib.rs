@@ -19,9 +19,7 @@ pub(crate) type TResult = Result<i64, RollError>;
 impl Display for Term {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Term::Die(x) => write!(f, "{}d{}",
-                                   x.number,
-                                   x.size),
+            Term::Die(x) => write!(f, "{}d{}", x.number, x.size),
             Term::Constant(x) => write!(f, "{}", x),
         }
     }
@@ -59,13 +57,9 @@ impl Display for ExpressionResult {
             // It will be easier to remove later if I change
             // the above.
             let first = iter.next().unwrap();
-            nstr.push_str(&format!("{} -> {}",
-                                   first.0,
-                                   first.1));
+            nstr.push_str(&format!("{} -> {}", first.0, first.1));
             for x in iter {
-                nstr.push_str(&format!(", {} -> {}",
-                                       x.0,
-                                       x.1));
+                nstr.push_str(&format!(", {} -> {}", x.0, x.1));
             }
             nstr.push_str(")");
         }
@@ -233,7 +227,7 @@ impl From<Expr> for ExprTuple {
 
 fn roll_expr_iter<I>(input: I) -> EResult
 where
-    I: Iterator<Item = Expr>
+    I: Iterator<Item = Expr>,
 {
     let mut rng = thread_rng();
     let mut pairs = Vec::new();
@@ -247,14 +241,15 @@ where
         match total.checked_add(res) {
             Some(x) => total = x,
             None => {
-                return if res > 0 { Err(RollError::OverflowPositive) }
-                else { Err(RollError::OverflowNegative) }
-            },
+                return if res > 0 {
+                    Err(RollError::OverflowPositive)
+                } else {
+                    Err(RollError::OverflowNegative)
+                }
+            }
         }
     }
-    Ok(ExpressionResult {
-        pairs, total,
-    })
+    Ok(ExpressionResult { pairs, total })
 }
 
 fn roll_tupl_iter<'a, I>(input: I) -> EResult
