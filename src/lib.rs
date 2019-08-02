@@ -158,10 +158,10 @@ where
 /// This function takes the usual dice expression format,
 /// and allows an arbitrary number of terms.
 /// ```
-/// # use mice::roll_dice;
+/// # use mice::roll;
 /// # use mice::RollError;
 /// let dice_expression = "d20 + 5 - d2";
-/// println!("{}", roll_dice(dice_expression)?);
+/// println!("{}", roll(dice_expression)?);
 /// # Ok::<(), RollError>(())
 /// ```
 ///
@@ -170,7 +170,7 @@ where
 ///   - The sum of all terms is too high
 ///   - The sum of all terms is too low
 ///   - Nonsense input
-pub fn roll_dice(input: &str) -> EResult {
+pub fn roll(input: &str) -> EResult {
     match wrap_dice(input) {
         Ok(x) => Ok(roll_expr_iter(x.into_iter())?),
         Err(x) => Err(RollError::from(x)),
@@ -281,10 +281,10 @@ pub fn roll_tupls(input: &[ExprTuple]) -> EResult {
 
 #[cfg(test)]
 mod test {
-    use crate::roll_dice;
+    use crate::roll;
     #[test]
     fn arithmetic() {
-        assert_eq!(roll_dice("5 + 3").unwrap().total, 8);
-        assert_eq!(roll_dice("5 - 3").unwrap().total, 2);
+        assert_eq!(roll("5 + 3").unwrap().total, 8);
+        assert_eq!(roll("5 - 3").unwrap().total, 2);
     }
 }
