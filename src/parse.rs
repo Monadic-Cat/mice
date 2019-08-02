@@ -62,7 +62,6 @@ pub(crate) struct Expr {
 }
 
 pub(crate) type Expression = Vec<Expr>;
-// Short for "Term Result"
 
 fn is_dec_digit(c: char) -> bool {
     c.is_digit(10)
