@@ -62,7 +62,7 @@ impl Display for ExpressionResult {
             nstr.push_str(&format!("{} -> {}",
                                    first.0,
                                    first.1));
-            for x in self.pairs.iter() {
+            for x in iter {
                 nstr.push_str(&format!(", {} -> {}",
                                        x.0,
                                        x.1));
