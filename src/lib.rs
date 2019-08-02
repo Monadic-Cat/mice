@@ -12,8 +12,68 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 // use wasm_bindgen::prelude::*;
 mod parse;
-use parse::{wrap_dice, Die, Expr, ParseError, Sign, TResult, Term};
+use parse::{wrap_dice, Die, Expr, ParseError, Sign, Term};
 
+pub(crate) type TResult = Result<i64, RollError>;
+
+impl Display for Term {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            Term::Die(x) => write!(f, "{}d{}",
+                                   x.number,
+                                   x.size),
+            Term::Constant(x) => write!(f, "{}", x),
+        }
+    }
+}
+
+impl Display for Expr {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        // N
+        // -N
+        // NdN
+        // -NdN
+        let mut nstr = String::new();
+        match self.sign {
+            Sign::Positive => (),
+            Sign::Negative => nstr.push_str("-"),
+        }
+        nstr.push_str(&format!("{}", self.term));
+        write!(f, "{}", nstr)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ExpressionResult {
+    /// Private field because `Expr`'s layout isn't final.
+    pairs: Vec<(Expr, i64)>,
+    pub total: i64,
+}
+impl Display for ExpressionResult {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        let mut nstr = self.total.to_string();
+        if self.pairs.len() > 1 {
+            nstr.push_str(" = (");
+            let mut iter = self.pairs.iter();
+            // Keep unwrap local so I can see *why* it's safe.
+            // It will be easier to remove later if I change
+            // the above. Additionally, make results immutable.
+            let first = iter.next().unwrap();
+            nstr.push_str(&format!("{} -> {}",
+                                   first.0,
+                                   first.1));
+            for x in self.pairs.iter() {
+                nstr.push_str(&format!(", {} -> {}",
+                                       x.0,
+                                       x.1));
+            }
+            nstr.push_str(")");
+        }
+        write!(f, "{}", nstr)
+    }
+}
+
+/// Most general mice error type.
 #[derive(Debug, Clone, Copy)]
 pub enum RollError {
     /// This indicates the usage of a d0
@@ -46,6 +106,7 @@ impl Display for RollError {
     }
 }
 impl Error for RollError {}
+type EResult = Result<ExpressionResult, RollError>;
 
 fn roll_die_with<R>(a: &Die, rng: &mut R) -> Result<u64, RollError>
 where
@@ -155,9 +216,9 @@ fn sum_terms(a: Vec<Expr>) -> TResult {
 ///   - The sum of all terms is too high
 ///   - The sum of all terms is too low
 ///   - Nonsense input
-pub fn roll_dice(input: &str) -> Result<i64, RollError> {
+pub fn roll_dice(input: &str) -> EResult {
     match wrap_dice(input) {
-        Ok(x) => Ok(sum_terms(x)?),
+        Ok(x) => Ok(roll_expr_iter(x.into_iter())?),
         Err(x) => Err(RollError::from(x)),
     }
 }
@@ -173,8 +234,8 @@ type ExprTuple = (i64, u64);
 ///
 /// The only possible error here is `RollError::InvalidExpression`.
 /// Other errors may be encountered in this function's complement:
-/// `roll_vec`.
-pub fn dice_vec(input: &str) -> Result<Vec<ExprTuple>, RollError> {
+/// `roll_tupls`.
+pub fn tupl_vec(input: &str) -> Result<Vec<ExprTuple>, RollError> {
     let e = wrap_dice(input)?;
     Ok(e.into_iter().map(|x| x.into()).collect())
 }
@@ -210,16 +271,43 @@ impl From<Expr> for ExprTuple {
     }
 }
 
-fn roll_iter<'a, I>(input: I) -> TResult
+fn roll_expr_iter<I>(input: I) -> EResult
+where
+    I: Iterator<Item = Expr>
+{
+    let mut rng = thread_rng();
+    let mut pairs = Vec::new();
+    let mut total: i64 = 0;
+    for x in input {
+        let res = match eval_term_with(&x, &mut rng) {
+            Ok(x) => x,
+            Err(x) => return Err(x),
+        };
+        pairs.push((x, res));
+        match total.checked_add(res) {
+            Some(x) => total = x,
+            None => {
+                return if res > 0 { Err(RollError::OverflowPositive) }
+                else { Err(RollError::OverflowNegative) }
+            },
+        }
+    }
+    Ok(ExpressionResult {
+        pairs, total,
+    })
+}
+
+fn roll_tupl_iter<'a, I>(input: I) -> EResult
 where
     I: Iterator<Item = &'a ExprTuple>,
 {
-    sum_terms(input.map(|x| Expr::from(*x)).collect())
+    let terms = input.map(|x| Expr::from(*x));
+    roll_expr_iter(terms)
 }
-/// Roll and sum a `Vec` of tuples, in the form
-/// provided by this function's complement: `dice_vec`
-pub fn roll_vec(input: &Vec<ExprTuple>) -> TResult {
-    roll_iter(input.iter())
+/// Roll and sum a slice of tuples, in the form
+/// provided by this function's complement: `tupl_vec`
+pub fn roll_tupls(input: &[ExprTuple]) -> EResult {
+    roll_tupl_iter(input.iter())
 }
 
 // /// JavaScript binding for `roll_dice`.
@@ -241,7 +329,7 @@ mod test {
     use crate::roll_dice;
     #[test]
     fn arithmetic() {
-        assert_eq!(roll_dice("5 + 3").unwrap(), 8);
-        assert_eq!(roll_dice("5 - 3").unwrap(), 2);
+        assert_eq!(roll_dice("5 + 3").unwrap().total, 8);
+        assert_eq!(roll_dice("5 - 3").unwrap().total, 2);
     }
 }

@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
  - Providing nicely formatted result strings via `util::roll_vec_nice`.
+ - Replace `roll_vec` with `roll_tupls`.
+ - Rename `dice_vec` to `tupl_vec`.
+ - Make `roll_dice` return more information.
 
 ## [0.1.6] - 2019-07-18
 ### Fixed
