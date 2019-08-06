@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2019-08-06
+## Fixed
+ - Fixed usage of `gen_range` from the `rand` crate. Rolls should now
+   produce outcomes in [1, n] for n-sided dice, as opposed to [1, n).
+
 ## [0.2.0] - 2019-08-02
 ### Changed
  - Removed `roll_vec` and replaced with the largely equivalent
@@ -50,7 +55,8 @@ but there's no good reason to use it.
  - `roll_dice`, a nice to have function for
    evaluating dice expression.
 
-[Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.2.1...HEAD
+[0.2.1]: https://github.com/Monadic-Cat/mice/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/Monadic-Cat/mice/compare/0.1.6...0.2.0
 [0.1.6]: https://github.com/Monadic-Cat/mice/compare/0.1.5...0.1.6
 [0.1.5]: https://github.com/Monadic-Cat/mice/compare/0.1.4...0.1.5
