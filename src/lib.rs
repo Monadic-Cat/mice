@@ -57,9 +57,15 @@ impl Display for ExpressionResult {
             // It will be easier to remove later if I change
             // the above.
             let first = iter.next().unwrap();
-            nstr.push_str(&format!("{} -> {}", first.0, first.1));
+            let form = |prior: Expr, val: i64| {
+                match prior.term {
+                    Term::Constant(_) => format!("{}", val),
+                    Term::Die(_) => format!("{} -> {}", prior, val),
+                }
+            };
+            nstr.push_str(&form(first.0, first.1));
             for x in iter {
-                nstr.push_str(&format!(", {} -> {}", x.0, x.1));
+                nstr.push_str(&format!(", {}", form(x.0, x.1)));
             }
             nstr.push_str(")");
         }
@@ -205,10 +211,14 @@ impl From<ExprTuple> for Expr {
             Sign::Positive
         };
         Self {
-            term: Term::Die(Die {
-                number: n as u64,
-                size: s,
-            }),
+            term: if s > 1 {
+                Term::Die(Die {
+                    number: n as u64,
+                    size: s,
+                })
+            } else {
+                Term::Constant(n as u64)
+            },
             sign,
         }
     }
