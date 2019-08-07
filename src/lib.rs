@@ -57,11 +57,9 @@ impl Display for ExpressionResult {
             // It will be easier to remove later if I change
             // the above.
             let first = iter.next().unwrap();
-            let form = |prior: Expr, val: i64| {
-                match prior.term {
-                    Term::Constant(_) => format!("{}", val),
-                    Term::Die(_) => format!("{} -> {}", prior, val),
-                }
+            let form = |prior: Expr, val: i64| match prior.term {
+                Term::Constant(_) => format!("{}", val),
+                Term::Die(_) => format!("{} → {}", prior, val),
             };
             nstr.push_str(&form(first.0, first.1));
             for x in iter {
