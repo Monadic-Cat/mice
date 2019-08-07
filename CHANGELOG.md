@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Rolling an expression with a cap on quantity of terms via
    `util::roll_capped`.
 
+## [0.2.2] - 2019-08-07
+## Changed
+ - Improved formatting output
+
 ## [0.2.1] - 2019-08-06
 ## Fixed
  - Fixed usage of `gen_range` from the `rand` crate. Rolls should now
@@ -57,7 +61,8 @@ but there's no good reason to use it.
  - `roll_dice`, a nice to have function for
    evaluating dice expression.
 
-[Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.2.1...HEAD
+[Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.2.2...HEAD
+[0.2.2]: https://github.com/Monadic-Cat/mice/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/Monadic-Cat/mice/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/Monadic-Cat/mice/compare/0.1.6...0.2.0
 [0.1.6]: https://github.com/Monadic-Cat/mice/compare/0.1.5...0.1.6
