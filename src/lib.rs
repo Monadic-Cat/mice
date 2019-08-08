@@ -45,6 +45,13 @@ impl Display for Expr {
 pub struct ExpressionResult {
     /// Private field because `Expr`'s layout isn't final.
     pairs: Vec<(Expr, i64)>,
+    // Making this public was a mistake.
+    // If I ever make methods to add terms
+    // I can't use this number unless I
+    // can trust that it is held immutable
+    // by the user.
+    // When next I make a breaking change,
+    // this has to go.
     pub total: i64,
 }
 impl Display for ExpressionResult {
