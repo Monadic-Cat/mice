@@ -23,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    which is more useful.
  - Renamed `dice_vec` to `tupl_vec`.
 
+## [0.1.7] - 2019-08-08
+### Fixed
+ - Fixed usage of gen_range from the rand crate.
+   Rolls should now produce outcomes in [1, n]
+   for n-sided dice, as opposed to [1, n).
+   **(Backported from 0.2.x)**
+
 ## [0.1.6] - 2019-07-18
 ### Fixed
  - Removed a `println!` I used for
@@ -62,7 +69,8 @@ but there's no good reason to use it.
 [Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.2.2...HEAD
 [0.2.2]: https://github.com/Monadic-Cat/mice/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/Monadic-Cat/mice/compare/0.2.0...0.2.1
-[0.2.0]: https://github.com/Monadic-Cat/mice/compare/0.1.6...0.2.0
+[0.2.0]: https://github.com/Monadic-Cat/mice/compare/0.1.7...0.2.0
+[0.1.7]: https://github.com/Monadic-Cat/mice/compare/0.1.6...0.1.7
 [0.1.6]: https://github.com/Monadic-Cat/mice/compare/0.1.5...0.1.6
 [0.1.5]: https://github.com/Monadic-Cat/mice/compare/0.1.4...0.1.5
 [0.1.4]: https://github.com/Monadic-Cat/mice/compare/0.1.3...0.1.4
