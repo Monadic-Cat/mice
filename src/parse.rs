@@ -7,6 +7,7 @@ use nom::{
     sequence::tuple,
     IResult,
 };
+// use std::collections::HashMap;
 
 #[derive(Debug, Copy, Clone)]
 pub(crate) enum ParseError {
@@ -66,6 +67,7 @@ pub(crate) type Expression = Vec<Expr>;
 fn is_dec_digit(c: char) -> bool {
     c.is_digit(10)
 }
+
 fn integer(input: &str) -> IResult<&str, u64> {
     let (input, int) = take_while1(is_dec_digit)(input)?;
     // Pretend to be a 63 bit unsigned integer.
@@ -127,6 +129,13 @@ fn constant(input: &str) -> IResult<&str, Term> {
     let i = integer(input)?;
     Ok((i.0, Term::Constant(i.1)))
 }
+
+// /// Use like this, where map is a HashMap: `|x| variable(map, x)`
+// fn variable<'a>(dict: HashMap<&str, i64>, input: &'a str) -> IResult<&'a str, Term> {
+//     let (input, id) = take_while1(|c: char| c.is_alphabetic())(input)?;
+//     let v = dict.get(id)?;
+//     Ok((input, Term::Constant(v)))
+// }
 
 fn term(input: &str) -> IResult<&str, Term> {
     alt((die, constant))(input)
