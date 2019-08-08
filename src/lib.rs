@@ -58,7 +58,7 @@ where
         Err(RollError::InvalidDie)
     } else {
         let mut acc: u64 = 0;
-        for n in (0..a.number).map(|_| rng.gen_range(1, a.size)) {
+        for n in (0..a.number).map(|_| rng.gen_range(1, a.size + 1)) {
             acc = match acc.checked_add(n) {
                 Some(x) => x,
                 None => return Err(RollError::OverflowPositive),
