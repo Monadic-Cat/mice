@@ -45,15 +45,15 @@ impl Display for Expr {
 pub struct ExpressionResult {
     /// Private field because `Expr`'s layout isn't final.
     pairs: Vec<(Expr, i64)>,
-    // Making this public was a mistake.
-    // If I ever make methods to add terms
-    // I can't use this number unless I
-    // can trust that it is held immutable
-    // by the user.
-    // When next I make a breaking change,
-    // this has to go.
-    pub total: i64,
+    total: i64,
 }
+
+impl ExpressionResult {
+    pub fn total(&self) -> i64 {
+        self.total
+    }
+}
+
 impl Display for ExpressionResult {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         let mut nstr = self.total.to_string();

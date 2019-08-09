@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
  - Dice expression variables
  - Change `ExprTuple` (for 0.3.0)
+ - Replace public `total` field on `ExpressionResult`
+   with `ExpressionResult::total()` method. (for 0.3.0)
 
 ## [0.2.2] - 2019-08-07
 ## Changed
