@@ -6,7 +6,7 @@
 //! to games that I play.
 #![forbid(unsafe_code)]
 use rand::{thread_rng, Rng};
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
@@ -81,7 +81,7 @@ impl Display for ExpressionResult {
 /// Most general mice error type.
 #[derive(Debug, Clone, Copy)]
 pub enum RollError {
-    /// This indicates the usage of a d0
+    /// This indicates the usage of a die with <= 0 sides
     InvalidDie,
     /// The sum of terms is greater than what an `i64` can hold
     OverflowPositive,
@@ -113,7 +113,7 @@ impl Display for RollError {
 impl Error for RollError {}
 type EResult = Result<ExpressionResult, RollError>;
 
-fn roll_die_with<R>(a: &Die, rng: &mut R) -> Result<u64, RollError>
+fn roll_die_with<R>(a: &Die, rng: &mut R) -> Result<i64, RollError>
 where
     R: Rng,
 {
@@ -122,7 +122,7 @@ where
     } else if a.size < 1 {
         Err(RollError::InvalidDie)
     } else {
-        let mut acc: u64 = 0;
+        let mut acc: i64 = 0;
         // Rng::gen_range has an exlusive upper bound
         for n in (0..a.number).map(|_| rng.gen_range(1, a.size + 1)) {
             acc = match acc.checked_add(n) {
@@ -189,7 +189,7 @@ pub fn roll(input: &str) -> EResult {
     }
 }
 
-type ExprTuple = (i64, u64);
+type ExprTuple = (i64, i64);
 
 /// Get a `Vec` of tuples of the form:
 /// (number of dice, number of faces)
@@ -206,8 +206,9 @@ pub fn tupl_vec(input: &str) -> Result<Vec<ExprTuple>, RollError> {
     Ok(e.into_iter().map(|x| x.into()).collect())
 }
 
-impl From<ExprTuple> for Expr {
-    fn from(tup: ExprTuple) -> Self {
+impl TryFrom<ExprTuple> for Expr {
+    type Error = RollError;
+    fn try_from(tup: ExprTuple) -> Result<Self, RollError> {
         let (mut n, s) = tup;
         let sign = if n < 0 {
             n = -n;
@@ -215,24 +216,21 @@ impl From<ExprTuple> for Expr {
         } else {
             Sign::Positive
         };
-        Self {
+        Ok(Self {
             term: if s > 1 {
-                Term::Die(Die {
-                    number: n as u64,
-                    size: s,
-                })
+                Term::Die(Die::new(n, s)?)
             } else {
-                Term::Constant(n as u64)
+                Term::Constant(n)
             },
             sign,
-        }
+        })
     }
 }
 impl From<Expr> for ExprTuple {
     fn from(e: Expr) -> ExprTuple {
         let t = match e.term {
-            Term::Die(x) => (x.number as i64, x.size),
-            Term::Constant(x) => (x as i64, 1),
+            Term::Die(x) => (x.number, x.size),
+            Term::Constant(x) => (x, 1),
         };
         match e.sign {
             Sign::Positive => t,
@@ -241,39 +239,51 @@ impl From<Expr> for ExprTuple {
     }
 }
 
-fn roll_expr_iter<I>(input: I) -> EResult
+fn try_roll_expr_iter<I>(input: I) -> EResult
 where
-    I: Iterator<Item = Expr>,
+    I: Iterator<Item = Result<Expr, RollError>>,
 {
     let mut rng = thread_rng();
     let mut pairs = Vec::new();
     let mut total: i64 = 0;
     for x in input {
-        let res = match eval_term_with(&x, &mut rng) {
-            Ok(x) => x,
-            Err(x) => return Err(x),
-        };
-        pairs.push((x, res));
-        match total.checked_add(res) {
-            Some(x) => total = x,
-            None => {
-                return if res > 0 {
-                    Err(RollError::OverflowPositive)
-                } else {
-                    Err(RollError::OverflowNegative)
+        match x {
+            Ok(x) => {
+                let res = match eval_term_with(&x, &mut rng) {
+                    Ok(x) => x,
+                    Err(x) => return Err(x),
+                };
+                pairs.push((x, res));
+                match total.checked_add(res) {
+                    Some(x) => total = x,
+                    None => {
+                        return if res > 0 {
+                            Err(RollError::OverflowPositive)
+                        } else {
+                            Err(RollError::OverflowNegative)
+                        }
+                    }
                 }
             }
+            Err(x) => return Err(x),
         }
     }
     Ok(ExpressionResult { pairs, total })
+}
+
+fn roll_expr_iter<I>(input: I) -> EResult
+where
+    I: Iterator<Item = Expr>,
+{
+    try_roll_expr_iter(input.map(Ok))
 }
 
 fn roll_tupl_iter<'a, I>(input: I) -> EResult
 where
     I: Iterator<Item = &'a ExprTuple>,
 {
-    let terms = input.map(|x| Expr::from(*x));
-    roll_expr_iter(terms)
+    let terms = input.map(|x| Expr::try_from(*x));
+    try_roll_expr_iter(terms)
 }
 /// Roll and sum a slice of tuples, in the form
 /// provided by this function's complement: `tupl_vec`
@@ -296,11 +306,22 @@ pub fn roll_tupls(input: &[ExprTuple]) -> EResult {
 // N1dN2 (+/-) N3dN4 (+/-) [...] (+/-) NN
 
 #[cfg(test)]
-mod test {
-    use crate::roll;
+mod tests {
+    use crate::{roll, Die};
     #[test]
     fn arithmetic() {
         assert_eq!(roll("5 + 3").unwrap().total, 8);
         assert_eq!(roll("5 - 3").unwrap().total, 2);
+    }
+    #[test]
+    fn dice() {
+        let mut good = true;
+        match Die::new(0, 0) {
+            Ok(_) => good = false,
+            Err(_) => (),
+        }
+        if !good {
+            panic!()
+        }
     }
 }

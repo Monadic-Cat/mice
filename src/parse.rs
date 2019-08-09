@@ -26,17 +26,23 @@ impl std::error::Error for ParseError {}
 
 #[derive(Debug, Copy, Clone)]
 pub(crate) struct Die {
-    pub(crate) number: u64,
-    pub(crate) size: u64,
+    /// Negative numbers of dice are
+    /// incorrect, but matching integer
+    /// sizes is helpful.
+    pub(crate) number: i64,
+    /// Negative dice sizes are nonsense,
+    /// but matching integer sizes are helpful.
+    pub(crate) size: i64,
 }
 impl Die {
     #[allow(dead_code)]
-    fn new(number: u64, size: u64) -> Result<Die, RollError> {
-        // u64 type constraint means
-        // we don't need to check if number < 0
-        // Forbid d0. d1 is weird, but it
+    /// Creation of a `Die` may fail if:
+    ///  - number of sides < 1
+    ///  - number of dice  < 0
+    pub(crate) fn new(number: i64, size: i64) -> Result<Die, RollError> {
+        // Forbid d0 and below. d1 is weird, but it
         // has a correct interpretation.
-        if size < 1 {
+        if size < 1 || number < 0 {
             Err(RollError::InvalidDie)
         } else {
             Ok(Die { number, size })
@@ -47,7 +53,7 @@ impl Die {
 #[derive(Debug, Copy, Clone)]
 pub(crate) enum Term {
     Die(Die),
-    Constant(u64),
+    Constant(i64),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -68,7 +74,7 @@ fn is_dec_digit(c: char) -> bool {
     c.is_digit(10)
 }
 
-fn integer(input: &str) -> IResult<&str, u64> {
+fn integer(input: &str) -> IResult<&str, i64> {
     let (input, int) = take_while1(is_dec_digit)(input)?;
     // Pretend to be a 63 bit unsigned integer.
     let i = match int.parse::<i64>() {
@@ -81,7 +87,7 @@ fn integer(input: &str) -> IResult<&str, u64> {
                 nom::error::ErrorKind::TooLarge,
             )))
         }
-        Ok(x) => x as u64,
+        Ok(x) => x,
     };
     Ok((input, i))
 }
