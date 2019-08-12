@@ -6,7 +6,7 @@ This is a simple crate for evaluating dice expressions.
 It will receive features as I desire, or as are contributed
 if I happen to be so lucky.
 
-I am rather new to Rust, so I imagine some things in here are
-messier than they could be. I don't expect guidance, but
-please tell me if something in here irks you.
-
+Panicking from this crate is considered a serious bug.
+Please  submit an Issue on this project's GitHub repo
+if it manages to do that, and please describe the usage
+that it panicked from.
