@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Improved formatting output
 
 ## [0.2.1] - 2019-08-06
-## Fixed
+### Fixed
  - Fixed usage of `gen_range` from the `rand` crate. Rolls should now
    produce outcomes in [1, n] for n-sided dice, as opposed to [1, n).
 
