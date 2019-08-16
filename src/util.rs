@@ -28,7 +28,7 @@ type UResult = Result<ExpressionResult, UtilError>;
 
 /// For providing access to mice to irresponsible users
 pub fn roll_capped(input: &str, cap: i64) -> UResult {
-    let dice: Vec<(i64, u64)> = crate::tupl_vec(input)?;
+    let dice: Vec<(i64, i64)> = crate::tupl_vec(input)?;
     let mut roll_count = 0;
     for d in dice.iter() {
         if d.1 > 1 {
