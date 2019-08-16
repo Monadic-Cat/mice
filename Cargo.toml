@@ -1,11 +1,11 @@
 [package]
 name = "mice"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Monadic Cat <greenmonadcat@gmail.com>"]
 repository = "https://github.com/Monadic-Cat/mice"
 documentation = "https://docs.rs/mice"
 description = "messing with dice"
-keywords = ["dice", "roll", "parse"]
+keywords = ["dice", "roll", "parse", "dnd"]
 license = "MIT OR Apache-2.0"
 edition = "2018"
 
