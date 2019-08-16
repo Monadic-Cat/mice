@@ -13,6 +13,7 @@ use std::fmt::Formatter;
 // use wasm_bindgen::prelude::*;
 mod parse;
 use parse::{wrap_dice, Die, Expr, ParseError, Sign, Term};
+pub mod util;
 
 pub(crate) type TResult = Result<i64, RollError>;
 
