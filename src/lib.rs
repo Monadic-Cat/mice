@@ -14,6 +14,8 @@ use std::fmt::Formatter;
 mod parse;
 use parse::{wrap_dice, Die, Expr, ParseError, Sign, Term};
 pub mod util;
+#[cfg(feature = "python-bindings")]
+mod py;
 
 pub(crate) type TResult = Result<i64, RollError>;
 
