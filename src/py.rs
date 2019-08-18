@@ -26,6 +26,7 @@ Very little of mice's functionality is exposed.
     Ok(())
 });
 
+// Documentation comments placed inside this break it.
 py_class!(class ExpressionResult |py| {
     data res: crate::ExpressionResult;
     def __format__(&self, format_spec: &str) -> PyResult<String> {
