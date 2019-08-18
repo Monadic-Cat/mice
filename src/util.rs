@@ -1,8 +1,8 @@
 //! Nice to have utilities that aren't core to dice
 //! manipulation itself, just handy for some reason.
 use crate::{roll_tupls, ExpressionResult, RollError};
-use std::fmt::{Display, Formatter};
 use std::error::Error;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Copy)]
 pub enum UtilError {
