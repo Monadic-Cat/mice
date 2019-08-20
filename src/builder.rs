@@ -40,12 +40,11 @@ impl RollBuilder {
         self
     }
     pub fn into_roll(self) -> Result<Roll, BuildError> {
-        let expression = match self.expression {
-            Some(x) => x,
-            None => return Err(BuildError::NoExpression),
-        };
         Ok(Roll {
-            expression,
+            expression: match self.expression {
+                Some(x) => x,
+                None => return Err(BuildError::NoExpression),
+            },
             generator: match self.generator {
                 Some(x) => x,
                 None => Box::new(thread_rng()),
@@ -61,6 +60,6 @@ pub(crate) struct Roll {
 
 impl Roll {
     pub fn roll(&mut self) -> EResult {
-        roll_expr_iter_with(&mut self.generator, self.expression.iter().map(|x| *x))
+        roll_expr_iter_with(&mut self.generator, self.expression.iter().copied())
     }
 }
