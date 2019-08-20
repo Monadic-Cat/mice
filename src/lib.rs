@@ -10,9 +10,14 @@ use std::convert::{TryFrom, TryInto};
 use std::error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
-// use wasm_bindgen::prelude::*;
 mod parse;
 use parse::{wrap_dice, Die, Expr, ParseError, Sign, Term};
+#[cfg(target_arch = "wasm32")]
+mod builder;
+#[cfg(target_arch = "wasm32")]
+pub mod js;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
 pub mod util;
 
 pub(crate) type TResult = Result<i64, RollError>;
@@ -42,6 +47,7 @@ impl Display for Expr {
     }
 }
 
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct ExpressionResult {
     /// Private field because `Expr`'s layout isn't final.
@@ -49,6 +55,7 @@ pub struct ExpressionResult {
     total: i64,
 }
 
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl ExpressionResult {
     pub fn total(&self) -> i64 {
         self.total
@@ -240,17 +247,18 @@ impl From<Expr> for ExprTuple {
     }
 }
 
-fn try_roll_expr_iter<I>(input: I) -> EResult
+fn try_roll_expr_iter_with<I, R>(rng: &mut R, input: I) -> EResult
 where
     I: Iterator<Item = Result<Expr, RollError>>,
+    R: Rng,
 {
-    let mut rng = thread_rng();
+    // let mut rng = thread_rng(); // This doesn't work in WASM?
     let mut pairs = Vec::new();
     let mut total: i64 = 0;
     for x in input {
         match x {
             Ok(x) => {
-                let res = match eval_term_with(&x, &mut rng) {
+                let res = match eval_term_with(&x, rng) {
                     Ok(x) => x,
                     Err(x) => return Err(x),
                 };
@@ -271,7 +279,22 @@ where
     }
     Ok(ExpressionResult { pairs, total })
 }
+fn try_roll_expr_iter<I>(input: I) -> EResult
+where
+    I: Iterator<Item = Result<Expr, RollError>>,
+{
+    let mut rng = thread_rng();
+    try_roll_expr_iter_with(&mut rng, input)
+}
 
+#[cfg(target_arch = "wasm32")]
+fn roll_expr_iter_with<I, R>(rng: &mut R, input: I) -> EResult
+where
+    I: Iterator<Item = Expr>,
+    R: Rng,
+{
+    try_roll_expr_iter_with(rng, input.map(Ok))
+}
 fn roll_expr_iter<I>(input: I) -> EResult
 where
     I: Iterator<Item = Expr>,
@@ -291,15 +314,6 @@ where
 pub fn roll_tupls(input: &[ExprTuple]) -> EResult {
     roll_tupl_iter(input.iter())
 }
-
-// /// JavaScript binding for `roll_dice`.
-// #[wasm_bindgen]
-// pub fn roll(input: &str) -> Result<i64, JsValue> {
-//     match roll_dice(input) {
-//         Ok(x) => Ok(x),
-//         Err(x) => Err(JsValue::from_str(&format!("{}", x))),
-//     }
-// }
 
 // N
 // dN1   (+/-) N2
