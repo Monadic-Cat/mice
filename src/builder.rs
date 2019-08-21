@@ -32,7 +32,7 @@ impl RollBuilder {
         self.expression = Some(expression);
         Ok(self)
     }
-    pub fn with_expression(mut self, expression: crate::parse::Expression) -> RollBuilder {
+    pub fn with_expression(mut self, expression: Expression) -> RollBuilder {
         self.expression = Some(expression);
         self
     }
