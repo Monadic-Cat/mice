@@ -7,7 +7,7 @@ use crate::{
     parse::ParseError,
     ExprTuple, ExpressionResult, RollError,
 };
-use js_sys::{Array, Function, Math::random, Reflect::get};
+use js_sys::{Function, Math::random, Reflect::get};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use std::convert::TryInto;
@@ -50,17 +50,6 @@ pub fn roll(input: &str) -> Result<ExpressionResult, JsValue> {
 #[wasm_bindgen]
 pub struct Expression {
     exp: crate::parse::Expression,
-}
-
-fn try_collect<T, E, I>(iter: I) -> Result<Vec<T>, E>
-where
-    I: Iterator<Item = Result<T, E>>,
-{
-    let mut res = Vec::new();
-    for x in iter {
-        res.push(x?)
-    }
-    Ok(res)
 }
 
 #[wasm_bindgen]
