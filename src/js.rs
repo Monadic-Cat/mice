@@ -41,10 +41,10 @@ impl ExpressionResult {
 #[wasm_bindgen]
 pub fn roll(input: &str) -> Result<ExpressionResult, JsValue> {
     Ok(RollBuilder::new()
-        .parse(input)?
-        .with_rng(Box::new(StdRng::seed_from_u64(random().to_bits())))
-        .into_roll()?
-        .roll()?)
+       .parse(input)?
+       .with_rng(Box::new(StdRng::seed_from_u64(random().to_bits())))
+       .into_roll()?
+       .roll()?)
 }
 
 #[wasm_bindgen]
@@ -75,6 +75,13 @@ impl Expression {
         self.exp = try_collect(v)?;
         Ok(self)
     }
+    /// JavaScript usage:
+    /// ```ignore
+    /// console.log(parse("2d6 + 3")
+    ///             .map((a, b) => [a * 2, b])
+    ///             .roll()
+    ///             .display())
+    /// ```
     /// This doesn't work on numbers too large, and panics on not receiving
     /// an array of the form `[integer, integer]`.
     /// The panic will be removed at some time in the future.
