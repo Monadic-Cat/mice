@@ -16,6 +16,7 @@ Things are still not good here.
 Very little of mice's functionality is exposed.
 ",
     )?;
+    m.add(py, "version", format!("{}", env!("CARGO_PKG_VERSION")))?;
     m.add(py, "roll", py_fn!(py, roll(a: &str)))?;
     m.add(py, "tupl_vec", py_fn!(py, tupl_vec(a: &str)))?;
     m.add(
