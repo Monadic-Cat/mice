@@ -63,7 +63,7 @@ impl Expression {
     /// ```
     /// This doesn't work on numbers too large to fit
     /// with the same precision inside both `f64` and `i64`.
-    pub fn map(mut self, f: Function) -> Result<Expression, JsValue> {
+    pub fn map(&self, f: Function) -> Result<Expression, JsValue> {
         let func = |a, b| {
             f.call2(
                 &JsValue::null(),
@@ -84,8 +84,9 @@ impl Expression {
             } as i64;
             new_exp.push((number, size).try_into()?)
         }
-        self.exp = new_exp;
-        Ok(self)
+        Ok(Expression {
+            exp: new_exp,
+        })
     }
     pub fn roll(&self) -> Result<ExpressionResult, JsValue> {
         Ok(RollBuilder::new()
