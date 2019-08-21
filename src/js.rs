@@ -41,10 +41,10 @@ impl ExpressionResult {
 #[wasm_bindgen]
 pub fn roll(input: &str) -> Result<ExpressionResult, JsValue> {
     Ok(RollBuilder::new()
-       .parse(input)?
-       .with_rng(Box::new(StdRng::seed_from_u64(random().to_bits())))
-       .into_roll()?
-       .roll()?)
+        .parse(input)?
+        .with_rng(Box::new(StdRng::seed_from_u64(random().to_bits())))
+        .into_roll()?
+        .roll()?)
 }
 
 #[wasm_bindgen]
@@ -65,16 +65,6 @@ where
 
 #[wasm_bindgen]
 impl Expression {
-    fn internal_map(&mut self, f: impl Fn(i64, i64) -> (i64, i64)) -> Result<&mut Self, RollError> {
-        let v = self
-            .exp
-            .iter()
-            .map(|x| ExprTuple::from(*x))
-            .map(|(a, b)| f(a, b))
-            .map(|x| x.try_into());
-        self.exp = try_collect(v)?;
-        Ok(self)
-    }
     /// JavaScript usage:
     /// ```ignore
     /// console.log(parse("2d6 + 3")
@@ -82,36 +72,38 @@ impl Expression {
     ///             .roll()
     ///             .display())
     /// ```
-    /// This doesn't work on numbers too large, and panics on not receiving
-    /// an array of the form `[integer, integer]`.
-    /// The panic will be removed at some time in the future.
+    /// This doesn't work on numbers too large to fit
+    /// with the same precision inside both `f64` and `i64`.
     pub fn map(mut self, f: Function) -> Result<Expression, JsValue> {
-        self.internal_map(|a: i64, b: i64| {
-            let res = f
-                .call2(
-                    &JsValue::null(),
-                    &JsValue::from_f64(a as f64),
-                    &JsValue::from_f64(b as f64),
-                )
-                .unwrap();
-            let number = get(&res, &JsValue::from_f64(0.0))
-                .unwrap()
-                .as_f64()
-                .unwrap() as i64;
-            let size = get(&res, &JsValue::from_f64(1.0))
-                .unwrap()
-                .as_f64()
-                .unwrap() as i64;
-            (number, size)
-        })?;
+        let func = |a, b| {
+            f.call2(
+                &JsValue::null(),
+                &JsValue::from_f64(a as f64),
+                &JsValue::from_f64(b as f64),
+            )
+        };
+        let mut new_exp = Vec::new();
+        for (a, b) in self.exp.iter().map(|x| ExprTuple::from(*x)) {
+            let res = func(a, b)?;
+            let number = match get(&res, &JsValue::from_f64(0.0))?.as_f64() {
+                Some(x) => x,
+                None => return Err(JsValue::from_str("Type mismatch")),
+            } as i64;
+            let size = match get(&res, &JsValue::from_f64(1.0))?.as_f64() {
+                Some(x) => x,
+                None => return Err(JsValue::from_str("Type mismatch")),
+            } as i64;
+            new_exp.push((number, size).try_into()?)
+        }
+        self.exp = new_exp;
         Ok(self)
     }
     pub fn roll(&self) -> Result<ExpressionResult, JsValue> {
         Ok(RollBuilder::new()
-           .with_expression(self.exp.clone())
-           .with_rng(Box::new(StdRng::seed_from_u64(random().to_bits())))
-           .into_roll()?
-           .roll()?)
+            .with_expression(self.exp.clone())
+            .with_rng(Box::new(StdRng::seed_from_u64(random().to_bits())))
+            .into_roll()?
+            .roll()?)
     }
 }
 
