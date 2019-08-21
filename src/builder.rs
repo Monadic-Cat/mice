@@ -17,7 +17,7 @@ impl std::fmt::Display for BuildError {
 impl Error for BuildError {}
 
 pub(crate) struct RollBuilder {
-    expression: Option<crate::parse::Expression>,
+    expression: Option<Expression>,
     generator: Option<Box<RngCore>>,
 }
 impl RollBuilder {
@@ -31,6 +31,10 @@ impl RollBuilder {
         let expression = wrap_dice(input)?;
         self.expression = Some(expression);
         Ok(self)
+    }
+    pub fn with_expression(mut self, expression: crate::parse::Expression) -> RollBuilder {
+        self.expression = Some(expression);
+        self
     }
     /// Pay specific attention to this when targeting WASM.
     /// Until thread local storage is supported, the default
