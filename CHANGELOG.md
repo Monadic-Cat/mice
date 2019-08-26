@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+ - Interface for more involved operations: `builder::*`.
+ - WASM compatibility. (Requires `builder::*`)
+ - Basic usage examples on crate level doc page.
+### Changed
+- `ExpressionResult`s can now be passed to JS from WASM.
+  (Requires `builder::*`)
+- Removed `.` from the end of
+  `RollError::InvalidExpression`'s `Display` message.
 
 ## [0.3.1] - 2019-08-16
 ### Added
