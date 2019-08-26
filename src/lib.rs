@@ -5,14 +5,17 @@
 //! usage, and will likely obtain extensions related
 //! to games that I play.
 #![forbid(unsafe_code)]
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use std::convert::{TryFrom, TryInto};
 use std::error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
-// use wasm_bindgen::prelude::*;
 mod parse;
 use parse::{wrap_dice, Die, Expr, ParseError, Sign, Term};
+mod builder;
+use builder::RollBuilder;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
 pub mod util;
 
 pub(crate) type TResult = Result<i64, RollError>;
@@ -42,6 +45,7 @@ impl Display for Expr {
     }
 }
 
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct ExpressionResult {
     /// Private field because `Expr`'s layout isn't final.
@@ -49,9 +53,14 @@ pub struct ExpressionResult {
     total: i64,
 }
 
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl ExpressionResult {
     pub fn total(&self) -> i64 {
         self.total
+    }
+    #[cfg(target_arch = "wasm32")]
+    pub fn display(&self) -> String {
+        format!("{}", self)
     }
 }
 
@@ -184,10 +193,7 @@ where
 ///   - The sum of all terms is too low
 ///   - Nonsense input
 pub fn roll(input: &str) -> EResult {
-    match wrap_dice(input) {
-        Ok(x) => Ok(roll_expr_iter(x.into_iter())?),
-        Err(x) => Err(RollError::from(x)),
-    }
+    Ok(RollBuilder::new().parse(input)?.into_roll()?.roll()?)
 }
 
 type ExprTuple = (i64, i64);
@@ -240,17 +246,18 @@ impl From<Expr> for ExprTuple {
     }
 }
 
-fn try_roll_expr_iter<I>(input: I) -> EResult
+fn try_roll_expr_iter_with<I, R>(rng: &mut R, input: I) -> EResult
 where
     I: Iterator<Item = Result<Expr, RollError>>,
+    R: Rng,
 {
-    let mut rng = thread_rng();
+    // let mut rng = thread_rng(); // This doesn't work in WASM?
     let mut pairs = Vec::new();
     let mut total: i64 = 0;
     for x in input {
         match x {
             Ok(x) => {
-                let res = match eval_term_with(&x, &mut rng) {
+                let res = match eval_term_with(&x, rng) {
                     Ok(x) => x,
                     Err(x) => return Err(x),
                 };
@@ -272,34 +279,20 @@ where
     Ok(ExpressionResult { pairs, total })
 }
 
-fn roll_expr_iter<I>(input: I) -> EResult
+fn roll_expr_iter_with<I, R>(rng: &mut R, input: I) -> EResult
 where
     I: Iterator<Item = Expr>,
+    R: Rng,
 {
-    try_roll_expr_iter(input.map(Ok))
+    try_roll_expr_iter_with(rng, input.map(Ok))
 }
 
-fn roll_tupl_iter<'a, I>(input: I) -> EResult
-where
-    I: Iterator<Item = &'a ExprTuple>,
-{
-    let terms = input.map(|x| Expr::try_from(*x));
-    try_roll_expr_iter(terms)
-}
 /// Roll and sum a slice of tuples, in the form
 /// provided by this function's complement: `tupl_vec`
 pub fn roll_tupls(input: &[ExprTuple]) -> EResult {
-    roll_tupl_iter(input.iter())
+    // roll_tupl_iter(input.iter())
+    Ok(RollBuilder::new().with_tuples(input)?.into_roll()?.roll()?)
 }
-
-// /// JavaScript binding for `roll_dice`.
-// #[wasm_bindgen]
-// pub fn roll(input: &str) -> Result<i64, JsValue> {
-//     match roll_dice(input) {
-//         Ok(x) => Ok(x),
-//         Err(x) => Err(JsValue::from_str(&format!("{}", x))),
-//     }
-// }
 
 // N
 // dN1   (+/-) N2
