@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/Monadic-Cat/mice.svg?branch=master)](https://travis-ci.org/Monadic-Cat/mice)
+[![docs.rs](https://docs.rs/mice/badge.svg)](https://docs.rs/mice/)
+![License](https://img.shields.io/crates/l/mice)
 
 # mice, messing with dice
 
