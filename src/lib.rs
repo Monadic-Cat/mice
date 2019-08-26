@@ -310,7 +310,6 @@ where
 /// Roll and sum a slice of tuples, in the form
 /// provided by this function's complement: `tupl_vec`
 pub fn roll_tupls(input: &[ExprTuple]) -> EResult {
-    // roll_tupl_iter(input.iter())
     Ok(RollBuilder::new().with_tuples(input)?.into_roll()?.roll()?)
 }
 
