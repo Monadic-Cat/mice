@@ -4,6 +4,26 @@
 //! This crate is written primarily for my own
 //! usage, and will likely obtain extensions related
 //! to games that I play.
+//!
+//! Some basic usage:
+//!
+//! ```
+//! # use mice::{roll, RollError};
+//! println!("{}", roll("2d6 + 3")?);
+//! 
+//! println!("{}", roll("2d6 + 3")?.total());
+//! 
+//! let result = roll("2d6 + 3")?;
+//! println!("{}\n{}", result, result.total());
+//! # Ok::<(), RollError>(())
+//! ```
+//! 
+//! The parser accepts an arbitrary number of terms in a dice expression.
+//! ```
+//! # use mice::{roll, RollError};
+//! println!("{}", roll("9d8 + 4d2 - 5 - 8d7")?);
+//! # Ok::<(), RollError>(())
+//! ```
 #![forbid(unsafe_code)]
 use rand::Rng;
 use std::convert::{TryFrom, TryInto};
@@ -115,7 +135,7 @@ impl Display for RollError {
             RollError::OverflowPositive => write!(f, "sum is too high for `i64`"),
             RollError::OverflowNegative => write!(f, "sum is too low for `i64`"),
             RollError::InvalidExpression => {
-                write!(f, "you've specified an invalid dice expression.")
+                write!(f, "you've specified an invalid dice expression")
             }
         }
     }
