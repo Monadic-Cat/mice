@@ -1,12 +1,13 @@
 use crate::{
-    parse::{wrap_dice, Expression, ParseError},
-    roll_expr_iter_with, EResult,
+    parse::{wrap_dice, Expr, Expression},
+    roll_expr_iter_with, EResult, ExprTuple, RollError,
 };
+use std::convert::TryFrom;
 use std::error::Error;
 
 use rand::{thread_rng, RngCore};
 #[derive(Debug)]
-pub(crate) enum BuildError {
+pub enum BuildError {
     NoExpression,
 }
 impl std::fmt::Display for BuildError {
@@ -16,9 +17,17 @@ impl std::fmt::Display for BuildError {
 }
 impl Error for BuildError {}
 
-pub(crate) struct RollBuilder {
+impl From<BuildError> for RollError {
+    fn from(e: BuildError) -> RollError {
+        match e {
+            BuildError::NoExpression => RollError::InvalidExpression,
+        }
+    }
+}
+
+pub struct RollBuilder {
     expression: Option<Expression>,
-    generator: Option<Box<RngCore>>,
+    generator: Option<Box<dyn RngCore>>,
 }
 impl RollBuilder {
     pub fn new() -> RollBuilder {
@@ -27,19 +36,29 @@ impl RollBuilder {
             generator: None,
         }
     }
-    pub fn parse(mut self, input: &str) -> Result<RollBuilder, ParseError> {
+    pub fn parse(mut self, input: &str) -> Result<RollBuilder, RollError> {
         let expression = wrap_dice(input)?;
         self.expression = Some(expression);
         Ok(self)
     }
-    pub fn with_expression(mut self, expression: Expression) -> RollBuilder {
+    pub fn with_tuples(mut self, tuples: &[ExprTuple]) -> Result<RollBuilder, RollError> {
+        let mut expression = Vec::new();
+        for x in tuples {
+            expression.push(Expr::try_from(*x)?)
+        }
+        self.expression = Some(expression);
+        Ok(self)
+    }
+    #[allow(dead_code)]
+    pub(crate) fn with_expression(mut self, expression: Expression) -> RollBuilder {
         self.expression = Some(expression);
         self
     }
     /// Pay specific attention to this when targeting WASM.
     /// Until thread local storage is supported, the default
     /// RNG will not work- provide your own.
-    pub fn with_rng(mut self, rng: Box<RngCore>) -> RollBuilder {
+    #[allow(dead_code)]
+    pub fn with_rng(mut self, rng: Box<dyn RngCore>) -> RollBuilder {
         self.generator = Some(rng);
         self
     }
@@ -57,9 +76,9 @@ impl RollBuilder {
     }
 }
 
-pub(crate) struct Roll {
+pub struct Roll {
     expression: Expression,
-    generator: Box<RngCore>,
+    generator: Box<dyn RngCore>,
 }
 
 impl Roll {

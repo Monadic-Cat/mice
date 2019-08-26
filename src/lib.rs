@@ -5,17 +5,15 @@
 //! usage, and will likely obtain extensions related
 //! to games that I play.
 #![forbid(unsafe_code)]
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use std::convert::{TryFrom, TryInto};
 use std::error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
 mod parse;
 use parse::{wrap_dice, Die, Expr, ParseError, Sign, Term};
-#[cfg(target_arch = "wasm32")]
 mod builder;
-#[cfg(target_arch = "wasm32")]
-pub mod js;
+use builder::RollBuilder;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 pub mod util;
@@ -59,6 +57,10 @@ pub struct ExpressionResult {
 impl ExpressionResult {
     pub fn total(&self) -> i64 {
         self.total
+    }
+    #[cfg(target_arch = "wasm32")]
+    pub fn display(&self) -> String {
+        format!("{}", self)
     }
 }
 
@@ -191,10 +193,7 @@ where
 ///   - The sum of all terms is too low
 ///   - Nonsense input
 pub fn roll(input: &str) -> EResult {
-    match wrap_dice(input) {
-        Ok(x) => Ok(roll_expr_iter(x.into_iter())?),
-        Err(x) => Err(RollError::from(x)),
-    }
+    Ok(RollBuilder::new().parse(input)?.into_roll()?.roll()?)
 }
 
 type ExprTuple = (i64, i64);
@@ -279,15 +278,7 @@ where
     }
     Ok(ExpressionResult { pairs, total })
 }
-fn try_roll_expr_iter<I>(input: I) -> EResult
-where
-    I: Iterator<Item = Result<Expr, RollError>>,
-{
-    let mut rng = thread_rng();
-    try_roll_expr_iter_with(&mut rng, input)
-}
 
-#[cfg(target_arch = "wasm32")]
 fn roll_expr_iter_with<I, R>(rng: &mut R, input: I) -> EResult
 where
     I: Iterator<Item = Expr>,
@@ -295,24 +286,12 @@ where
 {
     try_roll_expr_iter_with(rng, input.map(Ok))
 }
-fn roll_expr_iter<I>(input: I) -> EResult
-where
-    I: Iterator<Item = Expr>,
-{
-    try_roll_expr_iter(input.map(Ok))
-}
 
-fn roll_tupl_iter<'a, I>(input: I) -> EResult
-where
-    I: Iterator<Item = &'a ExprTuple>,
-{
-    let terms = input.map(|x| Expr::try_from(*x));
-    try_roll_expr_iter(terms)
-}
 /// Roll and sum a slice of tuples, in the form
 /// provided by this function's complement: `tupl_vec`
 pub fn roll_tupls(input: &[ExprTuple]) -> EResult {
-    roll_tupl_iter(input.iter())
+    // roll_tupl_iter(input.iter())
+    Ok(RollBuilder::new().with_tuples(input)?.into_roll()?.roll()?)
 }
 
 // N
