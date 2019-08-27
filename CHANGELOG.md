@@ -86,7 +86,8 @@ but there's no good reason to use it.
  - `roll_dice`, a nice to have function for
    evaluating dice expression.
 
-[Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.3.1...HEAD
+[Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/Monadic-Cat/mice/compare/0.3.1...0.4.0
 [0.3.1]: https://github.com/Monadic-Cat/mice/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/Monadic-Cat/mice/compare/0.2.2...0.3.0
 [0.2.2]: https://github.com/Monadic-Cat/mice/compare/0.2.1...0.2.2
