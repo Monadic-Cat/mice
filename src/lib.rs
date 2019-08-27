@@ -10,14 +10,14 @@
 //! ```
 //! # use mice::{roll, RollError};
 //! println!("{}", roll("2d6 + 3")?);
-//! 
+//!
 //! println!("{}", roll("2d6 + 3")?.total());
-//! 
+//!
 //! let result = roll("2d6 + 3")?;
 //! println!("{}\n{}", result, result.total());
 //! # Ok::<(), RollError>(())
 //! ```
-//! 
+//!
 //! The parser accepts an arbitrary number of terms in a dice expression.
 //! ```
 //! # use mice::{roll, RollError};

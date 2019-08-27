@@ -4,6 +4,7 @@
 //! RNG in the place of the default `ThreadRng`.
 //! See [`rand` issue #313](https://github.com/rust-random/rand/issues/313)
 //! for why this is sometimes necessary.
+//!
 //! Here's an example port of the base `roll` function to JS:
 //! ```
 //! use rand::rngs::StdRng;
