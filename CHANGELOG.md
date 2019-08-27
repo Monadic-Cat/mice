@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.1] - 2019-08-16
 ### Added
- - Added `util` feature, which provides `roll_capped`.
+ - Added `util` module, which provides `roll_capped`.
 
 ## [0.3.0] - 2019-08-12
 ### Changed
