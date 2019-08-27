@@ -32,7 +32,7 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 mod parse;
 use parse::{wrap_dice, Die, Expr, ParseError, Sign, Term};
-mod builder;
+pub mod builder;
 use builder::RollBuilder;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;

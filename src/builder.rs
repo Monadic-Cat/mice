@@ -1,3 +1,28 @@
+//! A builder for rolling stuff.
+//! This API affords more flexibility than the basic one.
+//! Specifically, it allows a user to provide their own
+//! RNG in the place of the default `ThreadRng`.
+//! See [`rand` issue #313](https://github.com/rust-random/rand/issues/313)
+//! for why this is sometimes necessary.
+//! Here's an example port of the base `roll` function to JS:
+//! ```
+//! use rand::rngs::StdRng;
+//! use rand::SeedableRng;
+//! use wasm_bindgen::prelude::*;
+//! use js_sys::Math::random;
+//! use mice::{ExpressionResult, builder::RollBuilder};
+//! #[wasm_bindgen]
+//! pub fn roll(input: &str) -> Result<ExpressionResult, JsValue> {
+//!     Ok(RollBuilder::new()
+//!         .parse(input).unwrap()
+//!         .with_rng(Box::new(StdRng::seed_from_u64(random().to_bits())))
+//!         .into_roll().unwrap()
+//!         .roll().unwrap())
+//! }
+//! ```
+//! Note the `.with_rng` call. Without it, `.into_roll()` would
+//! unavoidably panic on trying to construct a `ThreadRng` where
+//! the underlying `rand` crate does not support it.
 use crate::{
     parse::{wrap_dice, Expr, Expression},
     roll_expr_iter_with, EResult, ExprTuple, RollError,
@@ -25,6 +50,7 @@ impl From<BuildError> for RollError {
     }
 }
 
+#[derive(Default)]
 pub struct RollBuilder {
     expression: Option<Expression>,
     generator: Option<Box<dyn RngCore>>,
