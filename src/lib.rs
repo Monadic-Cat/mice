@@ -155,10 +155,7 @@ where
         let mut acc: i64 = 0;
         // Rng::gen_range has an exlusive upper bound
         for n in (0..a.number).map(|_| rng.gen_range(1, a.size + 1)) {
-            acc = match acc.checked_add(n) {
-                Some(x) => x,
-                None => return Err(RollError::OverflowPositive),
-            }
+            acc = acc.checked_add(n).ok_or(RollError::OverflowPositive)?;
         }
         Ok(acc)
     }
@@ -277,21 +274,13 @@ where
     for x in input {
         match x {
             Ok(x) => {
-                let res = match eval_term_with(&x, rng) {
-                    Ok(x) => x,
-                    Err(x) => return Err(x),
-                };
+                let res = eval_term_with(&x, rng)?;
                 pairs.push((x, res));
-                match total.checked_add(res) {
-                    Some(x) => total = x,
-                    None => {
-                        return if res > 0 {
-                            Err(RollError::OverflowPositive)
-                        } else {
-                            Err(RollError::OverflowNegative)
-                        }
-                    }
-                }
+                total = total.checked_add(res).ok_or(if res > 0 {
+                    RollError::OverflowPositive
+                } else {
+                    RollError::OverflowNegative
+                })?;
             }
             Err(x) => return Err(x),
         }
