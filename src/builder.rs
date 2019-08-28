@@ -91,14 +91,10 @@ impl RollBuilder {
     }
     pub fn into_roll(self) -> Result<Roll, BuildError> {
         Ok(Roll {
-            expression: match self.expression {
-                Some(x) => x,
-                None => return Err(BuildError::NoExpression),
-            },
-            generator: match self.generator {
-                Some(x) => x,
-                None => Box::new(thread_rng()),
-            },
+            expression: self.expression.ok_or(BuildError::NoExpression)?,
+            // DO NOT CONSTRUCT `ThreadRng` UNLESS IT IS REQUIRED.
+            // DOING SO MAY BREAK MICE AS MENTIONED ABOVE.
+            generator: self.generator.unwrap_or_else(|| Box::new(thread_rng())),
         })
     }
 }
