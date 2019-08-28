@@ -96,17 +96,9 @@ fn die(input: &str) -> IResult<&str, Term> {
     // number of dice : [integer]
     // separator      : "d"
     // size of dice   : integer
-    let (input, d) = tuple((opt(integer), tag("d"), integer))(input)?;
-    Ok((
-        input,
-        Term::Die(Die {
-            number: match d.0 {
-                Some(x) => x,
-                None => 1,
-            },
-            size: d.2,
-        }),
-    ))
+    let (input, (number, _, size)) = tuple((opt(integer), tag("d"), integer))(input)?;
+    let number = number.unwrap_or(1);
+    Ok((input, Term::Die(Die { number, size })))
 }
 
 fn addition(input: &str) -> IResult<&str, Sign> {
@@ -149,19 +141,12 @@ fn term(input: &str) -> IResult<&str, Term> {
 
 fn dice(input: &str) -> IResult<&str, Expression> {
     // [(+/-)] die ((+/-) die)*
-    let (input, s) = tuple((opt(separator), term, many0(tuple((separator, term)))))(input)?;
-    let mut expression = vec![Expr {
-        term: s.1,
-        sign: match s.0 {
-            Some(x) => x,
-            None => Sign::Positive,
-        },
-    }];
-    for t in s.2 {
-        expression.push(Expr {
-            term: t.1,
-            sign: t.0,
-        });
+    let (input, (sign, term, terms)) =
+        tuple((opt(separator), term, many0(tuple((separator, term)))))(input)?;
+    let sign = sign.unwrap_or(Sign::Positive);
+    let mut expression = vec![Expr { term, sign }];
+    for (sign, term) in terms {
+        expression.push(Expr { term, sign });
     }
     Ok((input, expression))
 }
