@@ -1,3 +1,5 @@
+use std::fmt::Display;
+use std::fmt::Formatter;
 use crate::RollError;
 use nom::{
     branch::alt,
@@ -56,6 +58,14 @@ pub(crate) enum Term {
     Die(Die),
     Constant(i64),
 }
+impl Display for Term {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            Term::Die(x) => write!(f, "{}d{}", x.number, x.size),
+            Term::Constant(x) => write!(f, "{}", x),
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum Sign {
@@ -85,6 +95,21 @@ impl<T: Neg<Output = T>> Mul<T> for Sign {
 pub(crate) struct Expr {
     pub(crate) term: Term,
     pub(crate) sign: Sign,
+}
+impl Display for Expr {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        // N
+        // -N
+        // NdN
+        // -NdN
+        let mut nstr = String::new();
+        match self.sign {
+            Sign::Positive => (),
+            Sign::Negative => nstr.push_str("-"),
+        }
+        nstr.push_str(&format!("{}", self.term));
+        write!(f, "{}", nstr)
+    }
 }
 
 pub(crate) type Expression = Vec<Expr>;

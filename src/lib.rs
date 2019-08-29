@@ -26,8 +26,6 @@
 //! ```
 #![forbid(unsafe_code)]
 use rand::Rng;
-use std::fmt::Display;
-use std::fmt::Formatter;
 mod error;
 use error::MyResult;
 pub use error::RollError;
@@ -43,37 +41,6 @@ use builder::RollBuilder;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 pub mod util;
-
-impl Display for Term {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self {
-            Term::Die(x) => write!(f, "{}d{}", x.number, x.size),
-            Term::Constant(x) => write!(f, "{}", x),
-        }
-    }
-}
-
-impl Display for Expr {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        // N
-        // -N
-        // NdN
-        // -NdN
-        let mut nstr = String::new();
-        match self.sign {
-            Sign::Positive => (),
-            Sign::Negative => nstr.push_str("-"),
-        }
-        nstr.push_str(&format!("{}", self.term));
-        write!(f, "{}", nstr)
-    }
-}
-
-impl Display for EvaluatedTerm {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.value())
-    }
-}
 
 fn roll_die_with<R>(a: &Die, rng: &mut R) -> Result<RolledDie, RollError>
 where
@@ -100,12 +67,6 @@ where
             parts,
             sign_part: Sign::Positive,
         })
-    }
-}
-
-impl From<RolledDie> for EvaluatedTerm {
-    fn from(d: RolledDie) -> EvaluatedTerm {
-        EvaluatedTerm::Die(d)
     }
 }
 

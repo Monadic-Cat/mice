@@ -93,3 +93,13 @@ impl Neg for EvaluatedTerm {
         }
     }
 }
+impl From<RolledDie> for EvaluatedTerm {
+    fn from(d: RolledDie) -> EvaluatedTerm {
+        EvaluatedTerm::Die(d)
+    }
+}
+impl Display for EvaluatedTerm {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.value())
+    }
+}
