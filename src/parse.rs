@@ -7,6 +7,7 @@ use nom::{
     sequence::tuple,
     IResult,
 };
+use std::ops::{Mul, Neg};
 // use std::collections::HashMap;
 
 #[derive(Debug, Copy, Clone)]
@@ -56,10 +57,28 @@ pub(crate) enum Term {
     Constant(i64),
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) enum Sign {
     Positive,
     Negative,
+}
+impl Neg for Sign {
+    type Output = Sign;
+    fn neg(self) -> Self::Output {
+        match self {
+            Sign::Positive => Sign::Negative,
+            Sign::Negative => Sign::Positive,
+        }
+    }
+}
+impl<T: Neg<Output = T>> Mul<T> for Sign {
+    type Output = T;
+    fn mul(self, rhs: T) -> Self::Output {
+        match self {
+            Sign::Positive => rhs,
+            Sign::Negative => -rhs,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]

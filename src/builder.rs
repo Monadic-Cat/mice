@@ -25,8 +25,10 @@
 //! unavoidably panic on trying to construct a `ThreadRng` where
 //! the underlying `rand` crate does not support it.
 use crate::{
+    expose::ExprTuple,
     parse::{wrap_dice, Expr, Expression},
-    roll_expr_iter_with, EResult, ExprTuple, RollError,
+    post::EResult,
+    roll_expr_iter_with, RollError,
 };
 use std::convert::TryFrom;
 use std::error::Error;
