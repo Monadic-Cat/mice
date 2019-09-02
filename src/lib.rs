@@ -40,6 +40,7 @@ pub mod builder;
 use builder::RollBuilder;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
+pub mod display;
 pub mod util;
 
 fn roll_die_with<R>(a: &Die, rng: &mut R) -> Result<RolledDie, RollError>

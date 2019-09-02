@@ -2,6 +2,7 @@ use crate::error::RollError;
 use crate::parse::{Expr, Sign, Term};
 use std::fmt::{Display, Formatter};
 use std::ops::Neg;
+use std::slice;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -22,6 +23,9 @@ impl ExpressionResult {
     #[cfg(target_arch = "wasm32")]
     pub fn display(&self) -> String {
         format!("{}", self)
+    }
+    pub(crate) fn pairs(&self) -> &Vec<(Expr, EvaluatedTerm)> {
+        &self.pairs
     }
 }
 impl ExpressionResult {
@@ -54,6 +58,22 @@ impl Display for ExpressionResult {
     }
 }
 
+/// Formatting options for dice expressions.
+/// All the useful tweaks and such.
+/// There may be crate internal fields.
+pub(crate) struct FormatOptions {
+    pub(crate) ignore_sign: bool,
+}
+impl FormatOptions {
+    pub(crate) fn new() -> FormatOptions {
+        FormatOptions { ignore_sign: false }
+    }
+    pub(crate) fn exclude_sign(mut self) -> Self {
+        self.ignore_sign = true;
+        self
+    }
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct RolledDie {
     pub(crate) total: i64,
@@ -70,17 +90,88 @@ impl Neg for RolledDie {
         }
     }
 }
+impl RolledDie {
+    fn format(&self, options: &FormatOptions) -> String {
+        if self.parts.len() > 1 {
+            let mut iter = self.parts.iter();
+            let first_sign;
+            let FormatOptions { ignore_sign } = options;
+            if !ignore_sign {
+                first_sign = match self.sign_part {
+                    Sign::Positive => "",
+                    Sign::Negative => "-",
+                };
+            } else {
+                first_sign = "";
+            }
+            let mut nstr = format!(
+                "{}{}",
+                if !ignore_sign { first_sign } else { "" },
+                iter.next().unwrap()
+            );
+            let sign_part = if !ignore_sign {
+                self.sign_part
+            } else {
+                Sign::Positive
+            };
+            for x in iter {
+                nstr.push_str(&format!(" {} {}", sign_part, x))
+            }
+            // nstr.push_str(&format!(" = {}", self.total));
+            nstr
+        } else {
+            format!("{}", self.total)
+        }
+    }
+}
+impl Display for RolledDie {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.format(&FormatOptions::new()))
+    }
+}
 
 #[derive(Debug, Clone)]
 pub(crate) enum EvaluatedTerm {
     Die(RolledDie),
     Constant(i64),
 }
+fn format_i64(s: i64, options: &FormatOptions) -> String {
+    let FormatOptions { ignore_sign } = options;
+    if *ignore_sign {
+        format!("{}", if s > 0 { s } else { -s })
+    } else {
+        format!("{}", s)
+    }
+}
 impl EvaluatedTerm {
     pub(crate) fn value(&self) -> i64 {
         match self {
             EvaluatedTerm::Die(x) => x.total,
             EvaluatedTerm::Constant(x) => *x,
+        }
+    }
+    pub(crate) fn parts(&self) -> &[i64] {
+        match self {
+            EvaluatedTerm::Die(x) => &x.parts,
+            EvaluatedTerm::Constant(x) => slice::from_ref(x),
+        }
+    }
+    pub(crate) fn sign(&self) -> Sign {
+        match self {
+            EvaluatedTerm::Die(x) => x.sign_part,
+            EvaluatedTerm::Constant(x) => {
+                if *x >= 0 {
+                    Sign::Positive
+                } else {
+                    Sign::Negative
+                }
+            }
+        }
+    }
+    pub(crate) fn format(&self, options: &FormatOptions) -> String {
+        match self {
+            EvaluatedTerm::Die(x) => x.format(options),
+            EvaluatedTerm::Constant(x) => format_i64(*x, options),
         }
     }
 }
@@ -100,6 +191,10 @@ impl From<RolledDie> for EvaluatedTerm {
 }
 impl Display for EvaluatedTerm {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.value())
+        // write!(f, "{}", self.value())
+        match self {
+            EvaluatedTerm::Die(x) => write!(f, "{}", x),
+            EvaluatedTerm::Constant(x) => write!(f, "{}", x),
+        }
     }
 }

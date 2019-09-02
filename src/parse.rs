@@ -1,5 +1,4 @@
-use std::fmt::Display;
-use std::fmt::Formatter;
+use crate::post::FormatOptions;
 use crate::RollError;
 use nom::{
     branch::alt,
@@ -9,6 +8,8 @@ use nom::{
     sequence::tuple,
     IResult,
 };
+use std::fmt::Display;
+use std::fmt::Formatter;
 use std::ops::{Mul, Neg};
 // use std::collections::HashMap;
 
@@ -90,25 +91,45 @@ impl<T: Neg<Output = T>> Mul<T> for Sign {
         }
     }
 }
+impl Display for Sign {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Sign::Positive => "+",
+                Sign::Negative => "-",
+            }
+        )
+    }
+}
 
 #[derive(Debug, Copy, Clone)]
 pub(crate) struct Expr {
     pub(crate) term: Term,
     pub(crate) sign: Sign,
 }
-impl Display for Expr {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+impl Expr {
+    pub(crate) fn format(&self, options: &FormatOptions) -> String {
         // N
         // -N
         // NdN
         // -NdN
         let mut nstr = String::new();
-        match self.sign {
-            Sign::Positive => (),
-            Sign::Negative => nstr.push_str("-"),
+        let FormatOptions { ignore_sign } = options;
+        if !ignore_sign {
+            match self.sign {
+                Sign::Positive => (),
+                Sign::Negative => nstr.push_str("-"),
+            }
         }
         nstr.push_str(&format!("{}", self.term));
-        write!(f, "{}", nstr)
+        nstr
+    }
+}
+impl Display for Expr {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.format(&FormatOptions::new()))
     }
 }
 
