@@ -92,7 +92,7 @@ where
     // but that may change. Switch to checked negation at some point.
     // This currently cannot panic because the maximum permitted
     // input is the `i64` positive max.
-    // This would panic if `t` were the `i64` negative max.
+    // This could panic if `t` were the `i64` negative max.
     // See the `parse` module for the implementation of `Sign::mul`.
     // I suggest providing a `Sign::checked_mul` method for this usage.
     (a.sign * t).into()
