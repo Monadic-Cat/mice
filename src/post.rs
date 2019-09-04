@@ -58,18 +58,48 @@ impl Display for ExpressionResult {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum TotalPosition {
+    Left,
+    Right,
+    Suppressed,
+}
+
 /// Formatting options for dice expressions.
 /// All the useful tweaks and such.
 /// There may be crate internal fields.
+/// If left unspecified, defaults to unspecified behavior.
+/// As in, formatting related to an already public option
+/// MAY change between patch releases.
+/// If specified, formatting SHOULD
+/// be constant between patch releases.
+/// New public options MUST cause a minor version increment.
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct FormatOptions {
     pub(crate) ignore_sign: bool,
+    pub(crate) total_position: TotalPosition,
 }
 impl FormatOptions {
     pub(crate) fn new() -> FormatOptions {
-        FormatOptions { ignore_sign: false }
+        FormatOptions {
+            ignore_sign: false,
+            total_position: TotalPosition::Suppressed,
+        }
     }
     pub(crate) fn exclude_sign(mut self) -> Self {
         self.ignore_sign = true;
+        self
+    }
+    pub(crate) fn total_right(mut self) -> Self {
+        self.total_position = TotalPosition::Right;
+        self
+    }
+    pub(crate) fn total_left(mut self) -> Self {
+        self.total_position = TotalPosition::Left;
+        self
+    }
+    pub(crate) fn no_total(mut self) -> Self {
+        self.total_position = TotalPosition::Suppressed;
         self
     }
 }
@@ -95,7 +125,7 @@ impl RolledDie {
         if self.parts.len() > 1 {
             let mut iter = self.parts.iter();
             let first_sign;
-            let FormatOptions { ignore_sign } = options;
+            let FormatOptions { ignore_sign, .. } = options;
             if !ignore_sign {
                 first_sign = match self.sign_part {
                     Sign::Positive => "",
@@ -136,7 +166,7 @@ pub(crate) enum EvaluatedTerm {
     Constant(i64),
 }
 fn format_i64(s: i64, options: &FormatOptions) -> String {
-    let FormatOptions { ignore_sign } = options;
+    let FormatOptions { ignore_sign, .. } = options;
     if *ignore_sign {
         format!("{}", if s > 0 { s } else { -s })
     } else {

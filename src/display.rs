@@ -34,22 +34,29 @@
 /// Use the "→" character in place of "->".
 /// Use verbosity level 3 for mbot.
 use crate::parse::{Expr, Term};
-use crate::post::{EvaluatedTerm, ExpressionResult, FormatOptions};
+use crate::post::{EvaluatedTerm, ExpressionResult, FormatOptions, TotalPosition};
 
-/// `T = (EXP → N [+ N]*) [+ (EXP → N [+ N]*)]*`
+/// `[T[ = ]](EXP → N [+ N]*) [+ (EXP → N [+ N]*)]*[[ = ]T]`
 pub fn mbot_format(e: ExpressionResult) -> String {
+    format(e, FormatOptions::new().total_right())
+}
+
+fn format(e: ExpressionResult, options: FormatOptions) -> String {
+    let FormatOptions { total_position, .. } = options;
     let pairs = e.pairs();
-    // let mut nstr = format!("{}", e.total());
-    let mut nstr = String::new();
+    let listing = pairs.len() > 1 || pairs[0].1.parts().len() > 1;
+    let total_sep = if listing { " = " } else { "" };
+    let mut nstr = match total_position {
+        TotalPosition::Left => format!("{}{}", e.total(), total_sep),
+        _ => String::new(),
+    };
     nstr = if pairs.is_empty() {
         nstr
-    } else if pairs.len() > 1 || pairs[0].1.parts().len() > 1 {
-        // VERBOSE TIME.
-        // format!("{}", e)
-        // nstr.push_str(" = ");
+    } else if listing {
+        // VERBOSE TIME
         let mut iter = pairs.iter();
         let first = iter.next().unwrap();
-        let formatting = FormatOptions::new().exclude_sign();
+        let formatting = options.exclude_sign();
         let form = |prior: &Expr, val: &EvaluatedTerm| match prior.term {
             Term::Constant(_) => val.format(&formatting),
             Term::Die(_) => format!(
@@ -67,6 +74,9 @@ pub fn mbot_format(e: ExpressionResult) -> String {
     } else {
         nstr
     };
-    nstr.push_str(&format!(" = {}", e.total()));
+    match total_position {
+        TotalPosition::Right => nstr.push_str(&format!("{}{}", total_sep, e.total())),
+        _ => (),
+    };
     nstr
 }

@@ -116,7 +116,7 @@ impl Expr {
         // NdN
         // -NdN
         let mut nstr = String::new();
-        let FormatOptions { ignore_sign } = options;
+        let FormatOptions { ignore_sign, .. } = options;
         if !ignore_sign {
             match self.sign {
                 Sign::Positive => (),
