@@ -59,11 +59,14 @@ where
         let mut total: i64 = 0;
         let mut parts = Vec::new();
         // Rng::gen_range has an exlusive upper bound
+        // Rng::gen includes the entire range of a type.
         for _ in 0..a.number {
-            let random = rng.gen_range(
-                1,
-                a.size.checked_add(1).ok_or(RollError::InvalidExpression)?,
-            );
+            let random;
+            if let Some(bound) = a.size.checked_add(1) {
+                random = rng.gen_range(1, bound);
+            } else {
+                random = rng.gen();
+            }
             total = total
                 .checked_add(random)
                 .ok_or(RollError::OverflowPositive)?;
