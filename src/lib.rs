@@ -59,9 +59,15 @@ where
         let mut total: i64 = 0;
         let mut parts = Vec::new();
         // Rng::gen_range has an exlusive upper bound
-        for n in (0..a.number).map(|_| rng.gen_range(1, a.size + 1)) {
-            total = total.checked_add(n).ok_or(RollError::OverflowPositive)?;
-            parts.push(n);
+        for _ in 0..a.number {
+            let random = rng.gen_range(
+                1,
+                a.size.checked_add(1).ok_or(RollError::InvalidExpression)?,
+            );
+            total = total
+                .checked_add(random)
+                .ok_or(RollError::OverflowPositive)?;
+            parts.push(random);
         }
         Ok(RolledDie {
             total,
