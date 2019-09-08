@@ -110,7 +110,7 @@ pub(crate) struct Expr {
     pub(crate) sign: Sign,
 }
 impl Expr {
-    pub(crate) fn format(&self, options: &FormatOptions) -> String {
+    pub(crate) fn format(&self, options: FormatOptions) -> String {
         // N
         // -N
         // NdN
@@ -129,7 +129,7 @@ impl Expr {
 }
 impl Display for Expr {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.format(&FormatOptions::new()))
+        write!(f, "{}", self.format(FormatOptions::new()))
     }
 }
 

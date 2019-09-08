@@ -30,17 +30,18 @@ mod error;
 use error::MyResult;
 pub use error::RollError;
 mod post;
-pub use post::ExpressionResult;
 use post::{EResult, EvaluatedTerm, RolledDie, TResult};
+pub use post::{ExpressionResult, FormatOptions};
 mod expose;
-pub use expose::{roll_tupls, tupl_vec};
+pub use expose::{roll_tuples, tuple_vec};
 mod parse;
 use parse::{Die, Expr, Sign, Term};
 pub mod builder;
 use builder::RollBuilder;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
-pub mod display;
+mod display;
+pub mod prelude;
 pub mod util;
 
 fn roll_die_with<R>(a: &Die, rng: &mut R) -> Result<RolledDie, RollError>

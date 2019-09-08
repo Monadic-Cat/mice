@@ -53,12 +53,12 @@ impl From<Expr> for ExprTuple {
 /// The only possible error here is `RollError::InvalidExpression`.
 /// Other errors may be encountered in this function's complement:
 /// `roll_tupls`.
-pub fn tupl_vec(input: &str) -> Result<Vec<ExprTuple>, RollError> {
+pub fn tuple_vec(input: &str) -> Result<Vec<ExprTuple>, RollError> {
     let e = wrap_dice(input)?;
     Ok(e.into_iter().map(|x| x.into()).collect())
 }
 /// Roll and sum a slice of tuples, in the form
 /// provided by this function's complement: `tupl_vec`
-pub fn roll_tupls(input: &[ExprTuple]) -> EResult {
+pub fn roll_tuples(input: &[ExprTuple]) -> EResult {
     Ok(RollBuilder::new().with_tuples(input)?.into_roll()?.roll()?)
 }

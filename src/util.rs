@@ -1,6 +1,6 @@
 //! Nice to have utilities that aren't core to dice
 //! manipulation itself, just handy for some reason.
-use crate::{roll_tupls, ExpressionResult, RollError};
+use crate::{roll_tuples, tuple_vec, ExpressionResult, RollError};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
@@ -28,7 +28,7 @@ type UResult = Result<ExpressionResult, UtilError>;
 
 /// For providing access to mice to irresponsible users
 pub fn roll_capped(input: &str, cap: i64) -> UResult {
-    let dice: Vec<(i64, i64)> = crate::tupl_vec(input)?;
+    let dice: Vec<(i64, i64)> = tuple_vec(input)?;
     let mut roll_count = 0;
     for d in dice.iter() {
         if d.1 > 1 {
@@ -47,6 +47,6 @@ pub fn roll_capped(input: &str, cap: i64) -> UResult {
     if roll_count > cap {
         Err(UtilError::ExceededCap)
     } else {
-        Ok(roll_tupls(&dice)?)
+        Ok(roll_tuples(&dice)?)
     }
 }

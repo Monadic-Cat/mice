@@ -37,11 +37,7 @@ use crate::parse::{Expr, Term};
 use crate::post::{EvaluatedTerm, ExpressionResult, FormatOptions, TotalPosition};
 
 /// `[T[ = ]](EXP → N [+ N]*) [+ (EXP → N [+ N]*)]*[[ = ]T]`
-pub fn mbot_format(e: ExpressionResult) -> String {
-    format(e, FormatOptions::new().total_right())
-}
-
-fn format(e: ExpressionResult, options: FormatOptions) -> String {
+pub(crate) fn format(e: &ExpressionResult, options: FormatOptions) -> String {
     let FormatOptions { total_position, .. } = options;
     let pairs = e.pairs();
     let listing = pairs.len() > 1 || pairs[0].1.parts().len() > 1;
@@ -58,11 +54,11 @@ fn format(e: ExpressionResult, options: FormatOptions) -> String {
         let first = iter.next().unwrap();
         let formatting = options.exclude_sign();
         let form = |prior: &Expr, val: &EvaluatedTerm| match prior.term {
-            Term::Constant(_) => val.format(&formatting),
+            Term::Constant(_) => val.format(formatting),
             Term::Die(_) => format!(
                 "({} → {})",
-                prior.format(&formatting),
-                val.format(&formatting)
+                prior.format(formatting),
+                val.format(formatting)
             ),
         };
         nstr.push_str(&form(&first.0, &first.1));
@@ -74,9 +70,8 @@ fn format(e: ExpressionResult, options: FormatOptions) -> String {
     } else {
         nstr
     };
-    match total_position {
-        TotalPosition::Right => nstr.push_str(&format!("{}{}", total_sep, e.total())),
-        _ => (),
-    };
+    if let TotalPosition::Right = total_position {
+        nstr.push_str(&format!("{}{}", total_sep, e.total()))
+    }
     nstr
 }
