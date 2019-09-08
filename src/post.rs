@@ -105,7 +105,7 @@ pub struct FormatOptions {
     pub(crate) summarize_terms: bool,
     pub(crate) term_separators: TermSeparator,
     pub(crate) term_parentheses: bool,         // TODO
-    pub(crate) term_list_parentheses: bool,    // TODO
+    pub(crate) term_list_parentheses: bool,
 }
 impl FormatOptions {
     /// Obtain a new `FormatOptions` object.
