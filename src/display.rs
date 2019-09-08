@@ -34,11 +34,11 @@
 /// Use the "→" character in place of "->".
 /// Use verbosity level 3 for mbot.
 use crate::parse::{Expr, Term};
-use crate::post::{EvaluatedTerm, ExpressionResult, FormatOptions, TotalPosition};
+use crate::post::{EvaluatedTerm, ExpressionResult, FormatOptions, TotalPosition, TermSeparator};
 
 /// `[T[ = ]](EXP → N [+ N]*) [+ (EXP → N [+ N]*)]*[[ = ]T]`
 pub(crate) fn format(e: &ExpressionResult, options: FormatOptions) -> String {
-    let FormatOptions { total_position, .. } = options;
+    let FormatOptions { total_position, term_separators, .. } = options;
     let pairs = e.pairs();
     let listing = pairs.len() > 1 || pairs[0].1.parts().len() > 1;
     let total_sep = if listing { " = " } else { "" };
@@ -52,7 +52,10 @@ pub(crate) fn format(e: &ExpressionResult, options: FormatOptions) -> String {
         // VERBOSE TIME
         let mut iter = pairs.iter();
         let first = iter.next().unwrap();
-        let formatting = options.exclude_sign();
+        let mut formatting = options;
+        if let TermSeparator::PlusSign = term_separators {
+            formatting = options.exclude_sign();
+        }
         let form = |prior: &Expr, val: &EvaluatedTerm| match prior.term {
             Term::Constant(_) => val.format(formatting),
             Term::Die(_) => format!(
@@ -63,7 +66,11 @@ pub(crate) fn format(e: &ExpressionResult, options: FormatOptions) -> String {
         };
         nstr.push_str(&form(&first.0, &first.1));
         for (before, after) in iter {
-            nstr.push_str(&format!(" {} ", after.sign()));
+            if let TermSeparator::PlusSign = term_separators {
+                nstr.push_str(&format!(" {} ", after.sign()));
+            } else {
+                nstr.push_str(", ");
+            }
             nstr.push_str(&form(before, &after));
         }
         nstr
