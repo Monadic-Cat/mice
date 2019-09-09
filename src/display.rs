@@ -45,6 +45,8 @@ pub(crate) fn format(e: &ExpressionResult, options: FormatOptions) -> String {
             nstr.push(')');
         }
         nstr
+    } else if let TotalPosition::Suppressed = total_position {
+        format!("{}", e.total())
     } else {
         nstr
     };
