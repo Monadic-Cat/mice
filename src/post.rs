@@ -262,7 +262,12 @@ pub(crate) enum EvaluatedTerm {
 fn format_i64(s: i64, options: FormatOptions) -> String {
     let FormatOptions { ignore_sign, .. } = options;
     if ignore_sign {
-        format!("{}", if s > 0 { s } else { -s })
+        match s.checked_abs() {
+            Some(x) => format!("{}", x),
+            // Unnecessarily expensive, but I'm not seeing
+            // an API for this in `std`.
+            None => String::from(&format!("{}", s)[1..]),
+        }
     } else {
         format!("{}", s)
     }
