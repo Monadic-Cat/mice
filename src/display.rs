@@ -42,7 +42,6 @@ pub(crate) fn format(e: &ExpressionResult, options: FormatOptions) -> String {
         total_position,
         term_separators,
         term_list_parentheses,
-        term_parentheses,
         ..
     } = options;
     let pairs = e.pairs();
@@ -65,21 +64,7 @@ pub(crate) fn format(e: &ExpressionResult, options: FormatOptions) -> String {
         if let TermSeparator::PlusSign = term_separators {
             formatting = options.exclude_sign();
         }
-        let form = |prior: &Expr, val: &EvaluatedTerm| match prior.term {
-            Term::Constant(_) => val.format(formatting),
-            Term::Die(_) => {
-                let dice_term = format!(
-                    "{} → {}",
-                    prior.format(formatting),
-                    val.format(formatting)
-                );
-                if term_parentheses {
-                    format!("({})", dice_term)
-                } else {
-                    dice_term
-                }
-            }
-        };
+        let form = |a, b| format_dice_term(a, b, formatting);
         nstr.push_str(&form(&first.0, &first.1));
         for (before, after) in iter {
             if let TermSeparator::PlusSign = term_separators {
@@ -100,4 +85,21 @@ pub(crate) fn format(e: &ExpressionResult, options: FormatOptions) -> String {
         nstr.push_str(&format!("{}{}", total_sep, e.total()))
     }
     nstr
+}
+
+fn format_dice_term(prior: &Expr, val: &EvaluatedTerm, f: FormatOptions) -> String {
+    let FormatOptions {
+        term_parentheses, ..
+    } = f;
+    match prior.term {
+        Term::Constant(_) => val.format(f),
+        Term::Die(_) => {
+            let dice_term = format!("{} → {}", prior.format(f), val.format(f));
+            if term_parentheses {
+                format!("({})", dice_term)
+            } else {
+                dice_term
+            }
+        }
+    }
 }
