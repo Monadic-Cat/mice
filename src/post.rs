@@ -1,5 +1,5 @@
 use crate::error::RollError;
-use crate::parse::{Expr, Sign, Term};
+use crate::parse::{Expr, Sign};
 use std::fmt::{Display, Formatter};
 use std::ops::Neg;
 use std::slice;
@@ -44,25 +44,7 @@ impl ExpressionResult {
 
 impl Display for ExpressionResult {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        let mut nstr = self.total().to_string();
-        if self.pairs.len() > 1 {
-            nstr.push_str(" = (");
-            let mut iter = self.pairs.iter();
-            // Keep unwrap local so I can see *why* it's safe.
-            // It will be easier to remove later if I change
-            // the above.
-            let first = iter.next().unwrap();
-            let form = |prior: Expr, val: &EvaluatedTerm| match prior.term {
-                Term::Constant(_) => format!("{}", val),
-                Term::Die(_) => format!("{} → {}", prior, val),
-            };
-            nstr.push_str(&form(first.0, &first.1));
-            for x in iter {
-                nstr.push_str(&format!(", {}", form(x.0, &x.1)));
-            }
-            nstr.push_str(")");
-        }
-        write!(f, "{}", nstr)
+        write!(f, "{}", self.format(FormatOptions::new()))
     }
 }
 
