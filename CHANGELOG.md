@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+ - Changed default `ExpressionResult` format.
+ - Names of `tupl_vec` and `roll_tupls` to
+   `tuple_vec` and `roll_tuples`, respectively.
+### Added
+ - `FormatOptions`, to control the formatting of
+   dice expression results.
 
 ## [0.4.0]
 ### Added

@@ -1,3 +1,4 @@
+use crate::post::FormatOptions;
 use crate::RollError;
 use nom::{
     branch::alt,
@@ -7,6 +8,9 @@ use nom::{
     sequence::tuple,
     IResult,
 };
+use std::fmt::Display;
+use std::fmt::Formatter;
+use std::ops::{Mul, Neg};
 // use std::collections::HashMap;
 
 #[derive(Debug, Copy, Clone)]
@@ -55,17 +59,78 @@ pub(crate) enum Term {
     Die(Die),
     Constant(i64),
 }
+impl Display for Term {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            Term::Die(x) => write!(f, "{}d{}", x.number, x.size),
+            Term::Constant(x) => write!(f, "{}", x),
+        }
+    }
+}
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) enum Sign {
     Positive,
     Negative,
+}
+impl Neg for Sign {
+    type Output = Sign;
+    fn neg(self) -> Self::Output {
+        match self {
+            Sign::Positive => Sign::Negative,
+            Sign::Negative => Sign::Positive,
+        }
+    }
+}
+impl<T: Neg<Output = T>> Mul<T> for Sign {
+    type Output = T;
+    fn mul(self, rhs: T) -> Self::Output {
+        match self {
+            Sign::Positive => rhs,
+            Sign::Negative => -rhs,
+        }
+    }
+}
+impl Display for Sign {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Sign::Positive => "+",
+                Sign::Negative => "-",
+            }
+        )
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
 pub(crate) struct Expr {
     pub(crate) term: Term,
     pub(crate) sign: Sign,
+}
+impl Expr {
+    pub(crate) fn format(&self, options: FormatOptions) -> String {
+        // N
+        // -N
+        // NdN
+        // -NdN
+        let mut nstr = String::new();
+        let FormatOptions { ignore_sign, .. } = options;
+        if !ignore_sign {
+            match self.sign {
+                Sign::Positive => (),
+                Sign::Negative => nstr.push_str("-"),
+            }
+        }
+        nstr.push_str(&format!("{}", self.term));
+        nstr
+    }
+}
+impl Display for Expr {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.format(FormatOptions::new()))
+    }
 }
 
 pub(crate) type Expression = Vec<Expr>;

@@ -24,9 +24,12 @@
 //! Note the `.with_rng` call. Without it, `.into_roll()` would
 //! unavoidably panic on trying to construct a `ThreadRng` where
 //! the underlying `rand` crate does not support it.
+// pub use crate::post::FormatOptions;
 use crate::{
+    expose::ExprTuple,
     parse::{wrap_dice, Expr, Expression},
-    roll_expr_iter_with, EResult, ExprTuple, RollError,
+    post::EResult,
+    roll_expr_iter_with, RollError,
 };
 use std::convert::TryFrom;
 use std::error::Error;
@@ -108,4 +111,29 @@ impl Roll {
     pub fn roll(&mut self) -> EResult {
         roll_expr_iter_with(&mut self.generator, self.expression.iter().copied())
     }
+    // /// Proposed public API
+    // /// For the purpose of performance, discard all information
+    // /// unnecessary for the specified format.
+    // pub(crate) fn slim_roll(&mut self, _formatting: FormatOptions) -> EResult {
+    //     self.roll()
+    // }
 }
+
+// /// A roll that has been preemptively verified to be safe,
+// /// and thus requires no internal bounds checks.
+// /// The space of safe rolls is smaller than the space
+// /// of unsafe but still potentially valid rolls.
+// /// Still, `i64`s are large enough that this isn't likely
+// /// a concern for dice rolling.
+// /// Since obtaining this performs the same checks as using
+// /// a `Roll`, it is only worth doing if the same expression
+// /// is going to be used more than once.
+// struct SafeRoll {
+//     expression: Expression,
+//     generator: Box<dyn RngCore>,
+// }
+// impl SafeRoll {
+//     pub fn roll(&mut self) -> ExpressionResult {
+
+//     }
+// }
