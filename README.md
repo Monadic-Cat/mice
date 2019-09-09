@@ -13,6 +13,10 @@ Please  submit an Issue on this project's GitHub repo
 if it manages to do that, and please describe the usage
 that it panicked from.
 
+There is one known unavoidable panic that affects this crate.
+Out of memory. If there isn't enough memory for an allocation,
+`mice` *will* panic. I hope you understand.
+
 Without further ado, here's some usage:
 
 ```rust
