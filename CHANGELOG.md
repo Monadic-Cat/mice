@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.5.0]
 ### Changed
  - Changed default `ExpressionResult` format.
  - Names of `tupl_vec` and `roll_tupls` to
@@ -93,7 +95,8 @@ but there's no good reason to use it.
  - `roll_dice`, a nice to have function for
    evaluating dice expression.
 
-[Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.4.0...HEAD
+[Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.5.0...HEAD
+[0.5.0]: https://github.com/Monadic-Cat/mice/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/Monadic-Cat/mice/compare/0.3.1...0.4.0
 [0.3.1]: https://github.com/Monadic-Cat/mice/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/Monadic-Cat/mice/compare/0.2.2...0.3.0
