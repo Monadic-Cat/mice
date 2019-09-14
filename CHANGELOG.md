@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1]
+### Fixed
+ - `expose` module incorrectly accepted d0 terms. Fixed.
+
 ## [0.5.0]
 ### Changed
  - Changed default `ExpressionResult` format.
@@ -95,7 +99,8 @@ but there's no good reason to use it.
  - `roll_dice`, a nice to have function for
    evaluating dice expression.
 
-[Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.5.1...HEAD
+[0.5.1]: https://github.com/Monadic-Cat/mice/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/Monadic-Cat/mice/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/Monadic-Cat/mice/compare/0.3.1...0.4.0
 [0.3.1]: https://github.com/Monadic-Cat/mice/compare/0.3.0...0.3.1
