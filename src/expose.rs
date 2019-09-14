@@ -23,8 +23,10 @@ impl TryFrom<ExprTuple> for Expr {
         Ok(Self {
             term: if s > 1 {
                 Term::Die(Die::new(n, s)?)
-            } else {
+            } else if s == 1 {
                 Term::Constant(n)
+            } else {
+                return Err(RollError::InvalidDie)
             },
             sign,
         })
