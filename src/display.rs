@@ -32,6 +32,9 @@ pub(crate) fn format(e: &ExpressionResult, options: FormatOptions) -> String {
             formatting = options.exclude_sign();
         }
         let form = |a, b| format_dice_term(a, b, formatting);
+        if let TermSeparator::PlusSign = term_separators {
+            nstr.push_str(&format!("{}", first.1.sign()));
+        }
         nstr.push_str(&form(&first.0, &first.1));
         for (before, after) in iter {
             if let TermSeparator::PlusSign = term_separators {
