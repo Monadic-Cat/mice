@@ -1,5 +1,5 @@
 //! Formatting for dice expression results.
-use crate::parse::{Expr, Term};
+use crate::parse::{Expr, Term, Sign};
 use crate::post::{EvaluatedTerm, ExpressionResult, FormatOptions, TermSeparator, TotalPosition};
 
 /// `[T[ = ]](EXP → N [+ N]*) [+ (EXP → N [+ N]*)]*[[ = ]T]`
@@ -33,7 +33,10 @@ pub(crate) fn format(e: &ExpressionResult, options: FormatOptions) -> String {
         }
         let form = |a, b| format_dice_term(a, b, formatting);
         if let TermSeparator::PlusSign = term_separators {
-            nstr.push_str(&format!("{}", first.1.sign()));
+            match first.1.sign() {
+                Sign::Negative => nstr.push_str("-"),
+                _ => (),
+            }
         }
         nstr.push_str(&form(&first.0, &first.1));
         for (before, after) in iter {
