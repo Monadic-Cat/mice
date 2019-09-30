@@ -6,7 +6,7 @@
 //! for why this is sometimes necessary.
 //!
 //! Here's an example port of the base `roll` function to JS:
-//! ```
+//! ```ignore
 //! use rand::rngs::StdRng;
 //! use rand::SeedableRng;
 //! use wasm_bindgen::prelude::*;
