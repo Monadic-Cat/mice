@@ -4,8 +4,10 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
     combinator::opt,
+    error::ErrorKind::TooLarge,
     multi::many0,
     sequence::tuple,
+    Err::Failure,
     IResult,
 };
 use std::fmt::Display;
@@ -146,12 +148,7 @@ fn integer(input: &str) -> IResult<&str, i64> {
         // The only error possible here is
         // integer overflow.
         // This should emit a nom Failure
-        Err(_) => {
-            return Err(nom::Err::<(&str, nom::error::ErrorKind)>::Failure((
-                input,
-                nom::error::ErrorKind::TooLarge,
-            )))
-        }
+        Err(_) => return Err(Failure((input, TooLarge))),
         Ok(x) => x,
     };
     Ok((input, i))

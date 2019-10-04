@@ -26,7 +26,7 @@ impl TryFrom<ExprTuple> for Expr {
             } else if s == 1 {
                 Term::Constant(n)
             } else {
-                return Err(RollError::InvalidDie)
+                return Err(RollError::InvalidDie);
             },
             sign,
         })
