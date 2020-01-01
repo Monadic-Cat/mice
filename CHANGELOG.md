@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
  - Rename `RollError` to `Error`.
  - `#[cfg]` away unusable functions on `wasm32` targets.
+ - Expose `ParseError` so fine grained error handling on the builder is less bad.
 
 ## [0.5.3]
 ### Fixed

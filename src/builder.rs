@@ -27,7 +27,7 @@
 // pub use crate::post::FormatOptions;
 use crate::{
     expose::ExprTuple,
-    parse::{wrap_dice, Expr, Expression},
+    parse::{wrap_dice, Expr, Expression, ParseError},
     post::EResult,
     roll_expr_iter_with, Error,
 };
@@ -61,7 +61,7 @@ impl RollBuilder {
             generator: None,
         }
     }
-    pub fn parse(mut self, input: &str) -> Result<RollBuilder, Error> {
+    pub fn parse(mut self, input: &str) -> Result<RollBuilder, ParseError> {
         let expression = wrap_dice(input)?;
         self.expression = Some(expression);
         Ok(self)

@@ -37,6 +37,7 @@ mod expose;
 pub use expose::{roll_tuples, tuple_vec};
 mod parse;
 use parse::{Die, Expr, Sign, Term};
+pub use parse::ParseError;
 pub mod builder;
 use builder::RollBuilder;
 #[cfg(target_arch = "wasm32")]

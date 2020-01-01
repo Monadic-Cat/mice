@@ -17,7 +17,7 @@ use thiserror::Error;
 // use std::collections::HashMap;
 
 #[derive(Debug, Copy, Clone, Error)]
-pub(crate) enum ParseError {
+pub enum ParseError {
     #[error("you've specified an invalid dice expression")]
     InvalidExpression,
 }
