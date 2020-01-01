@@ -1,6 +1,5 @@
 use crate::post::FormatOptions;
 use crate::Error;
-use thiserror::Error;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
@@ -14,6 +13,7 @@ use nom::{
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::ops::{Mul, Neg};
+use thiserror::Error;
 // use std::collections::HashMap;
 
 #[derive(Debug, Copy, Clone, Error)]

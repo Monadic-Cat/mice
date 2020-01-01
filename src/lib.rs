@@ -27,8 +27,8 @@
 #![forbid(unsafe_code)]
 use rand::Rng;
 mod error;
-use error::MyResult;
 pub use error::Error;
+use error::MyResult;
 mod post;
 use post::{EResult, EvaluatedTerm, RolledDie, TResult};
 pub use post::{ExpressionResult, FormatOptions};
@@ -69,9 +69,7 @@ where
             } else {
                 random = rng.gen();
             }
-            total = total
-                .checked_add(random)
-                .ok_or(Error::OverflowPositive)?;
+            total = total.checked_add(random).ok_or(Error::OverflowPositive)?;
             parts.push(random);
         }
         Ok(RolledDie {

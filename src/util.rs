@@ -1,8 +1,8 @@
 //! Nice to have utilities that aren't core to dice
 //! manipulation itself, just handy for some reason.
-use crate::{ExpressionResult, Error};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::{roll_tuples, tuple_vec};
+use crate::{Error, ExpressionResult};
 use thiserror::Error;
 
 #[derive(Debug, Clone, Copy, Error)]

@@ -2,10 +2,7 @@
 //! easier to get started using it. Just `use mice::prelude::*`
 //! and you're off to the races!
 
-pub use crate::{
-    builder::RollBuilder,
-    FormatOptions as MiceFormat, Error as MiceError,
-};
+pub use crate::{builder::RollBuilder, Error as MiceError, FormatOptions as MiceFormat};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::{

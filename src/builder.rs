@@ -31,8 +31,8 @@ use crate::{
     post::EResult,
     roll_expr_iter_with, Error,
 };
-use thiserror::Error;
 use std::convert::TryFrom;
+use thiserror::Error;
 
 use rand::{thread_rng, RngCore};
 #[derive(Debug, Error)]
