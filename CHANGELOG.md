@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+ - Rename `RollError` to `Error`.
+ - `#[cfg]` away unusable functions on `wasm32` targets.
 
 ## [0.5.3]
 ### Fixed
