@@ -1,32 +1,27 @@
 //! Nice to have utilities that aren't core to dice
 //! manipulation itself, just handy for some reason.
-use crate::{roll_tuples, tuple_vec, ExpressionResult, RollError};
-use std::error::Error;
-use std::fmt::{Display, Formatter};
+use crate::{ExpressionResult, Error};
+#[cfg(not(target_arch = "wasm32"))]
+use crate::{roll_tuples, tuple_vec};
+use thiserror::Error;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Error)]
 pub enum UtilError {
+    #[error("tried to DOS me.")]
     ExceededCap,
-    RollError(RollError),
+    #[error("{0}")]
+    RollError(Error),
 }
-impl From<RollError> for UtilError {
-    fn from(e: RollError) -> Self {
+impl From<Error> for UtilError {
+    fn from(e: Error) -> Self {
         UtilError::RollError(e)
     }
 }
-impl Display for UtilError {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self {
-            UtilError::ExceededCap => write!(f, "tried to DOS me."),
-            UtilError::RollError(e) => e.fmt(f),
-        }
-    }
-}
-impl Error for UtilError {}
 
 type UResult = Result<ExpressionResult, UtilError>;
 
 /// For providing access to mice to irresponsible users
+#[cfg(not(target_arch = "wasm32"))]
 pub fn roll_capped(input: &str, cap: i64) -> UResult {
     let dice: Vec<(i64, i64)> = tuple_vec(input)?;
     let mut roll_count = 0;

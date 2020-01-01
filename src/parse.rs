@@ -1,5 +1,6 @@
 use crate::post::FormatOptions;
-use crate::RollError;
+use crate::Error;
+use thiserror::Error;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
@@ -15,20 +16,11 @@ use std::fmt::Formatter;
 use std::ops::{Mul, Neg};
 // use std::collections::HashMap;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Error)]
 pub(crate) enum ParseError {
+    #[error("you've specified an invalid dice expression")]
     InvalidExpression,
 }
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            ParseError::InvalidExpression => {
-                write!(f, "you've specified an invalid dice expression")
-            }
-        }
-    }
-}
-impl std::error::Error for ParseError {}
 
 #[derive(Debug, Copy, Clone)]
 pub(crate) struct Die {
@@ -41,15 +33,14 @@ pub(crate) struct Die {
     pub(crate) size: i64,
 }
 impl Die {
-    #[allow(dead_code)]
     /// Creation of a `Die` may fail if:
     ///  - number of sides < 1
     ///  - number of dice  < 0
-    pub(crate) fn new(number: i64, size: i64) -> Result<Die, RollError> {
+    pub(crate) fn new(number: i64, size: i64) -> Result<Die, Error> {
         // Forbid d0 and below. d1 is weird, but it
         // has a correct interpretation.
         if size < 1 || number < 0 {
-            Err(RollError::InvalidDie)
+            Err(Error::InvalidDie)
         } else {
             Ok(Die { number, size })
         }

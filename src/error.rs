@@ -1,52 +1,42 @@
 use crate::parse::ParseError;
 use crate::post::{EvaluatedTerm, TResult};
-use std::error::Error;
-use std::fmt::{Display, Formatter};
+// use std::error::Error as StdError;
 use std::ops::Neg;
+use thiserror::Error;
 
-/// Most general mice error type.
-#[derive(Debug, Clone, Copy)]
-pub enum RollError {
+/// Most general mice error type. Exported as `MiceError` in the prelude.
+#[derive(Debug, Clone, Copy, Error)]
+pub enum Error {
     /// This indicates the usage of a die with <= 0 sides
+    #[error("Invalid die")]
     InvalidDie,
     /// The sum of terms is greater than what an `i64` can hold
+    #[error("sum is too high for `i64`")]
     OverflowPositive,
     /// The sum of terms is lower than what an `i64` can hold
+    #[error("sum is too low for `i64`")]
     OverflowNegative,
     /// The expression evaluated isn't a valid dice expression
+    #[error("you've specified an invalid dice expression")]
     InvalidExpression,
 }
-impl Neg for RollError {
+impl Neg for Error {
     type Output = Self;
     fn neg(self) -> Self::Output {
         match self {
-            RollError::OverflowPositive => RollError::OverflowNegative,
-            RollError::OverflowNegative => RollError::OverflowPositive,
+            Error::OverflowPositive => Error::OverflowNegative,
+            Error::OverflowNegative => Error::OverflowPositive,
             x => x,
         }
     }
 }
-impl From<ParseError> for RollError {
+impl From<ParseError> for Error {
     fn from(e: ParseError) -> Self {
         match e {
-            ParseError::InvalidExpression => RollError::InvalidExpression,
+            ParseError::InvalidExpression => Error::InvalidExpression,
         }
     }
 }
-
-impl Display for RollError {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self {
-            RollError::InvalidDie => write!(f, "Invalid die"),
-            RollError::OverflowPositive => write!(f, "sum is too high for `i64`"),
-            RollError::OverflowNegative => write!(f, "sum is too low for `i64`"),
-            RollError::InvalidExpression => {
-                write!(f, "you've specified an invalid dice expression")
-            }
-        }
-    }
-}
-impl Error for RollError {}
 
 pub(crate) enum MyResult<T, E> {
     Ok(T),
@@ -62,7 +52,7 @@ impl<T: Neg<Output = T>, E: Neg<Output = E>> Neg for MyResult<T, E> {
         }
     }
 }
-type MTResult = MyResult<EvaluatedTerm, RollError>;
+type MTResult = MyResult<EvaluatedTerm, Error>;
 impl From<MTResult> for TResult {
     fn from(r: MTResult) -> TResult {
         match r {

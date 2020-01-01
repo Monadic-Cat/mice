@@ -4,6 +4,11 @@
 
 pub use crate::{
     builder::RollBuilder,
+    FormatOptions as MiceFormat, Error as MiceError,
+};
+
+#[cfg(not(target_arch = "wasm32"))]
+pub use crate::{
     expose::{roll_tuples, tuple_vec},
-    roll, FormatOptions as MiceFormat, RollError,
+    roll,
 };

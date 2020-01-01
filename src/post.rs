@@ -1,4 +1,4 @@
-use crate::error::RollError;
+use crate::error::Error;
 use crate::parse::{Expr, Sign};
 use std::fmt::{Display, Formatter};
 use std::ops::Neg;
@@ -6,8 +6,8 @@ use std::slice;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-pub(crate) type TResult = Result<EvaluatedTerm, RollError>;
-pub(crate) type EResult = Result<ExpressionResult, RollError>;
+pub(crate) type TResult = Result<EvaluatedTerm, Error>;
+pub(crate) type EResult = Result<ExpressionResult, Error>;
 
 /// The result of evaluating a dice expression.
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
@@ -78,7 +78,7 @@ pub(crate) enum TermSeparator {
 ///     .term_list_parens()
 ///     .concise();
 /// println!("{}", roll("2d6 + 3")?.format(format));
-/// # Ok::<(), RollError>(())
+/// # Ok::<(), MiceError>(())
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub struct FormatOptions {

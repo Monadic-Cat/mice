@@ -29,27 +29,22 @@ use crate::{
     expose::ExprTuple,
     parse::{wrap_dice, Expr, Expression},
     post::EResult,
-    roll_expr_iter_with, RollError,
+    roll_expr_iter_with, Error,
 };
+use thiserror::Error;
 use std::convert::TryFrom;
-use std::error::Error;
 
 use rand::{thread_rng, RngCore};
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum BuildError {
+    #[error("builder given no expression")]
     NoExpression,
 }
-impl std::fmt::Display for BuildError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "eh")
-    }
-}
-impl Error for BuildError {}
 
-impl From<BuildError> for RollError {
-    fn from(e: BuildError) -> RollError {
+impl From<BuildError> for Error {
+    fn from(e: BuildError) -> Error {
         match e {
-            BuildError::NoExpression => RollError::InvalidExpression,
+            BuildError::NoExpression => Error::InvalidExpression,
         }
     }
 }
@@ -66,12 +61,12 @@ impl RollBuilder {
             generator: None,
         }
     }
-    pub fn parse(mut self, input: &str) -> Result<RollBuilder, RollError> {
+    pub fn parse(mut self, input: &str) -> Result<RollBuilder, Error> {
         let expression = wrap_dice(input)?;
         self.expression = Some(expression);
         Ok(self)
     }
-    pub fn with_tuples(mut self, tuples: &[ExprTuple]) -> Result<RollBuilder, RollError> {
+    pub fn with_tuples(mut self, tuples: &[ExprTuple]) -> Result<RollBuilder, Error> {
         let mut expression = Vec::new();
         for x in tuples {
             expression.push(Expr::try_from(*x)?)

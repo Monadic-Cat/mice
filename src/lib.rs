@@ -8,31 +8,32 @@
 //! Some basic usage:
 //!
 //! ```
-//! # use mice::{roll, RollError};
+//! # use mice::{roll, Error};
 //! println!("{}", roll("2d6 + 3")?);
 //!
 //! println!("{}", roll("2d6 + 3")?.total());
 //!
 //! let result = roll("2d6 + 3")?;
 //! println!("{}\n{}", result, result.total());
-//! # Ok::<(), RollError>(())
+//! # Ok::<(), Error>(())
 //! ```
 //!
 //! The parser accepts an arbitrary number of terms in a dice expression.
 //! ```
-//! # use mice::{roll, RollError};
+//! # use mice::{roll, Error};
 //! println!("{}", roll("9d8 + 4d2 - 5 - 8d7")?);
-//! # Ok::<(), RollError>(())
+//! # Ok::<(), Error>(())
 //! ```
 #![forbid(unsafe_code)]
 use rand::Rng;
 mod error;
 use error::MyResult;
-pub use error::RollError;
+pub use error::Error;
 mod post;
 use post::{EResult, EvaluatedTerm, RolledDie, TResult};
 pub use post::{ExpressionResult, FormatOptions};
 mod expose;
+#[cfg(not(target_arch = "wasm32"))]
 pub use expose::{roll_tuples, tuple_vec};
 mod parse;
 use parse::{Die, Expr, Sign, Term};
@@ -44,7 +45,7 @@ mod display;
 pub mod prelude;
 pub mod util;
 
-fn roll_die_with<R>(a: &Die, rng: &mut R) -> Result<RolledDie, RollError>
+fn roll_die_with<R>(a: &Die, rng: &mut R) -> Result<RolledDie, Error>
 where
     R: Rng,
 {
@@ -55,7 +56,7 @@ where
             sign_part: Sign::Positive,
         })
     } else if a.size < 1 {
-        Err(RollError::InvalidDie)
+        Err(Error::InvalidDie)
     } else {
         let mut total: i64 = 0;
         let mut parts = Vec::new();
@@ -70,7 +71,7 @@ where
             }
             total = total
                 .checked_add(random)
-                .ok_or(RollError::OverflowPositive)?;
+                .ok_or(Error::OverflowPositive)?;
             parts.push(random);
         }
         Ok(RolledDie {
@@ -104,10 +105,10 @@ where
 /// and allows an arbitrary number of terms.
 /// ```
 /// # use mice::roll;
-/// # use mice::RollError;
+/// # use mice::Error;
 /// let dice_expression = "d20 + 5 - d2";
 /// println!("{}", roll(dice_expression)?);
-/// # Ok::<(), RollError>(())
+/// # Ok::<(), Error>(())
 /// ```
 ///
 /// An `Err` is returned in the following cases:
@@ -115,13 +116,14 @@ where
 ///   - The sum of all terms is too high
 ///   - The sum of all terms is too low
 ///   - Nonsense input
+#[cfg(not(target_arch = "wasm32"))]
 pub fn roll(input: &str) -> EResult {
     Ok(RollBuilder::new().parse(input)?.into_roll()?.roll()?)
 }
 
 fn try_roll_expr_iter_with<I, R>(rng: &mut R, input: I) -> EResult
 where
-    I: Iterator<Item = Result<Expr, RollError>>,
+    I: Iterator<Item = Result<Expr, Error>>,
     R: Rng,
 {
     // let mut rng = thread_rng(); // This doesn't work in WASM?
@@ -134,9 +136,9 @@ where
                 let res_val = res.value();
                 pairs.push((x, res));
                 total = total.checked_add(res_val).ok_or(if res_val > 0 {
-                    RollError::OverflowPositive
+                    Error::OverflowPositive
                 } else {
-                    RollError::OverflowNegative
+                    Error::OverflowNegative
                 })?;
             }
             Err(x) => return Err(x),

@@ -4,15 +4,15 @@ use std::convert::TryFrom;
 
 use crate::{
     builder::RollBuilder,
-    error::RollError,
+    error::Error,
     parse::{wrap_dice, Die, Expr, Sign, Term},
     post::EResult,
 };
 pub(crate) type ExprTuple = (i64, i64);
 
 impl TryFrom<ExprTuple> for Expr {
-    type Error = RollError;
-    fn try_from(tup: ExprTuple) -> Result<Self, RollError> {
+    type Error = Error;
+    fn try_from(tup: ExprTuple) -> Result<Self, Error> {
         let (mut n, s) = tup;
         let sign = if n < 0 {
             n = -n;
@@ -26,7 +26,7 @@ impl TryFrom<ExprTuple> for Expr {
             } else if s == 1 {
                 Term::Constant(n)
             } else {
-                return Err(RollError::InvalidDie);
+                return Err(Error::InvalidDie);
             },
             sign,
         })
@@ -52,15 +52,16 @@ impl From<Expr> for ExprTuple {
 ///
 /// There is no guarantee of the order of terms.
 ///
-/// The only possible error here is `RollError::InvalidExpression`.
+/// The only possible error here is `Error::InvalidExpression`.
 /// Other errors may be encountered in this function's complement:
 /// `roll_tuples`.
-pub fn tuple_vec(input: &str) -> Result<Vec<ExprTuple>, RollError> {
+pub fn tuple_vec(input: &str) -> Result<Vec<ExprTuple>, Error> {
     let e = wrap_dice(input)?;
     Ok(e.into_iter().map(|x| x.into()).collect())
 }
 /// Roll and sum a slice of tuples, in the form
 /// provided by this function's complement: `tuple_vec`
+#[cfg(not(target_arch = "wasm32"))]
 pub fn roll_tuples(input: &[ExprTuple]) -> EResult {
     Ok(RollBuilder::new().with_tuples(input)?.into_roll()?.roll()?)
 }
