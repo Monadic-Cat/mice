@@ -5,7 +5,7 @@ use std::convert::TryFrom;
 use crate::{
     builder::RollBuilder,
     error::Error,
-    parse::{wrap_dice, Die, Expr, Sign, Term},
+    parse::{wrap_dice, Die, Expr, Sign, Term, ParseError},
     post::EResult,
 };
 pub(crate) type ExprTuple = (i64, i64);
@@ -55,7 +55,7 @@ impl From<Expr> for ExprTuple {
 /// The only possible error here is `Error::InvalidExpression`.
 /// Other errors may be encountered in this function's complement:
 /// `roll_tuples`.
-pub fn tuple_vec(input: &str) -> Result<Vec<ExprTuple>, Error> {
+pub fn tuple_vec(input: &str) -> Result<Vec<ExprTuple>, ParseError> {
     let e = wrap_dice(input)?;
     Ok(e.into_iter().map(|x| x.into()).collect())
 }

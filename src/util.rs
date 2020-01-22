@@ -2,7 +2,7 @@
 //! manipulation itself, just handy for some reason.
 #[cfg(not(target_arch = "wasm32"))]
 use crate::{roll_tuples, tuple_vec};
-use crate::{Error, ExpressionResult};
+use crate::{Error, ExpressionResult, parse::ParseError};
 use thiserror::Error;
 
 #[derive(Debug, Clone, Copy, Error)]
@@ -15,6 +15,11 @@ pub enum UtilError {
 impl From<Error> for UtilError {
     fn from(e: Error) -> Self {
         UtilError::RollError(e)
+    }
+}
+impl From<ParseError> for UtilError {
+    fn from(e: ParseError) -> Self {
+        UtilError::RollError(e.into())
     }
 }
 
