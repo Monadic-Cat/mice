@@ -46,6 +46,36 @@ mod display;
 pub mod prelude;
 pub mod util;
 
+/// Unstable methods I export for my use.
+/// Developed in tandem with whatever I'm using it with.
+/// NO guarantees are provided as to this module's behavior.
+/// If you're not me, using this module may
+/// cause failed builds or unpredictable runtime behavior.
+/// Do not use this anywhere you cannot
+/// guarantee the EXACT same version will be used on every build.
+/// Copying `proc_macro2`'s Nightly-esque trick.
+/// If you use this, you and all your reverse deps must
+/// pass the mice_semver_exempt config flag to rustc.
+/// ```text
+/// RUSTFLAGS='--cfg mice_semver_exempt' cargo build
+/// ```
+/// This infectious nature is intentional, as it serves as
+/// a reminder that you are outside of the normal semver guarantees.
+/// Any sane person using this module would do well to specify a
+/// maximally specific version. Not that you should use this module.
+/// I'm just doing this because it's faster than spending the
+/// time to iron out the kinks in what I'm exposing here before I do so.
+#[cfg(mice_semver_exempt)]
+#[doc(hidden)]
+pub mod unstable {
+    // So that all unstable stuff is clearly imported from `unstable`,
+    // mirror the `parse` module inside `unstable`, instead of simply
+    // cfg-ing `parse` public when using unstable features.
+    pub mod parse {
+        pub use crate::parse::*;
+    }
+}
+
 fn roll_die_with<R>(a: &Die, rng: &mut R) -> Result<RolledDie, Error>
 where
     R: Rng,

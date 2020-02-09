@@ -1,5 +1,6 @@
 use crate::post::FormatOptions;
 use crate::Error;
+use mice_macro_lib::pub_if;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
@@ -22,6 +23,7 @@ pub enum ParseError {
     InvalidExpression,
 }
 
+#[pub_if(mice_semver_exempt)]
 #[derive(Debug, Copy, Clone)]
 pub(crate) struct Die {
     /// Negative numbers of dice are
@@ -47,6 +49,7 @@ impl Die {
     }
 }
 
+#[pub_if(mice_semver_exempt)]
 #[derive(Debug, Copy, Clone)]
 pub(crate) enum Term {
     Die(Die),
@@ -61,6 +64,7 @@ impl Display for Term {
     }
 }
 
+#[pub_if(mice_semver_exempt)]
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum Sign {
     Positive,
@@ -97,6 +101,7 @@ impl Display for Sign {
     }
 }
 
+#[pub_if(mice_semver_exempt)]
 #[derive(Debug, Copy, Clone)]
 pub(crate) struct Expr {
     pub(crate) term: Term,
@@ -126,12 +131,15 @@ impl Display for Expr {
     }
 }
 
+#[pub_if(mice_semver_exempt)]
 pub(crate) type Expression = Vec<Expr>;
 
+#[pub_if(mice_semver_exempt)]
 fn is_dec_digit(c: char) -> bool {
     c.is_digit(10)
 }
 
+#[pub_if(mice_semver_exempt)]
 fn integer(input: &str) -> IResult<&str, i64> {
     let (input, int) = take_while1(is_dec_digit)(input)?;
     // Pretend to be a 63 bit unsigned integer.
@@ -145,6 +153,7 @@ fn integer(input: &str) -> IResult<&str, i64> {
     Ok((input, i))
 }
 
+#[pub_if(mice_semver_exempt)]
 fn die(input: &str) -> IResult<&str, Term> {
     // number of dice : [integer]
     // separator      : "d"
@@ -154,28 +163,34 @@ fn die(input: &str) -> IResult<&str, Term> {
     Ok((input, Term::Die(Die { number, size })))
 }
 
+#[pub_if(mice_semver_exempt)]
 fn addition(input: &str) -> IResult<&str, Sign> {
     let (input, _) = tag("+")(input)?;
     Ok((input, Sign::Positive))
 }
+#[pub_if(mice_semver_exempt)]
 fn subtraction(input: &str) -> IResult<&str, Sign> {
     let (input, _) = tag("-")(input)?;
     Ok((input, Sign::Negative))
 }
 
+#[pub_if(mice_semver_exempt)]
 fn operator(input: &str) -> IResult<&str, Sign> {
     alt((addition, subtraction))(input)
 }
 
+#[pub_if(mice_semver_exempt)]
 fn whitespace(input: &str) -> IResult<&str, &str> {
     alt((tag(" "), tag("\t")))(input)
 }
 
+#[pub_if(mice_semver_exempt)]
 fn separator(input: &str) -> IResult<&str, Sign> {
     let (input, t) = tuple((many0(whitespace), operator, many0(whitespace)))(input)?;
     Ok((input, t.1))
 }
 
+#[pub_if(mice_semver_exempt)]
 fn constant(input: &str) -> IResult<&str, Term> {
     let i = integer(input)?;
     Ok((i.0, Term::Constant(i.1)))
@@ -188,10 +203,12 @@ fn constant(input: &str) -> IResult<&str, Term> {
 //     Ok((input, Term::Constant(v)))
 // }
 
+#[pub_if(mice_semver_exempt)]
 fn term(input: &str) -> IResult<&str, Term> {
     alt((die, constant))(input)
 }
 
+#[pub_if(mice_semver_exempt)]
 fn dice(input: &str) -> IResult<&str, Expression> {
     // [(+/-)] die ((+/-) die)*
     let (input, (sign, term, terms)) =
@@ -205,6 +222,7 @@ fn dice(input: &str) -> IResult<&str, Expression> {
 }
 
 /// Wrap up getting errors from parsing a dice expression.
+#[pub_if(mice_semver_exempt)]
 pub(crate) fn wrap_dice(input: &str) -> Result<Expression, ParseError> {
     let (input, e) = match dice(input.trim()) {
         Ok(x) => x,

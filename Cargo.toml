@@ -17,6 +17,7 @@ crate-type = ["cdylib", "rlib"]
 nom = "5.0.0"
 rand = "0.7.0"
 thiserror = "1.0.6"
+mice-macro-lib = { path = "./mice-macro-lib" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen  = "0.2.50"
@@ -32,3 +33,8 @@ wasm-bindgen-test = "0.2"
 [[bench]]
 name = "my_benchmark"
 harness = false
+
+[workspace]
+members = [
+        "mice-macro-lib"
+]
