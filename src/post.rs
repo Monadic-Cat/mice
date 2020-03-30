@@ -226,7 +226,7 @@ impl RolledDie {
             // nstr.push_str(&format!(" = {}", self.total));
             nstr
         } else {
-            format!("{}", self.total)
+            format!("{}", if ignore_sign { self.total.abs() } else { self.total })
         }
     }
 }
