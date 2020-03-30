@@ -8,9 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
  - `tuple_vec` now uses the more specific `ParseError` error type.
 
-## [0.6.1]
-### Fixed
- - Sign factoring on single die terms
+## [0.6.1] - 2020-3-30 [YANKED]
+I accidentally published a planned breaking change together with a bugfix.
 
 ## [0.6.0]
 ### Changed
