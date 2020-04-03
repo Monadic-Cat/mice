@@ -1,6 +1,6 @@
 //! Nice to have utilities that aren't core to dice
 //! manipulation itself, just handy for some reason.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "thread_rng")]
 use crate::{roll_tuples, tuple_vec};
 use crate::{Error, ExpressionResult, parse::ParseError};
 use thiserror::Error;
@@ -26,7 +26,7 @@ impl From<ParseError> for UtilError {
 type UResult = Result<ExpressionResult, UtilError>;
 
 /// For providing access to mice to irresponsible users
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "thread_rng")]
 pub fn roll_capped(input: &str, cap: i64) -> UResult {
     let dice: Vec<(i64, i64)> = tuple_vec(input)?;
     let mut roll_count = 0;

@@ -4,7 +4,7 @@
 
 pub use crate::{builder::RollBuilder, Error as MiceError, FormatOptions as MiceFormat};
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "thread_rng")]
 pub use crate::{
     expose::{roll_tuples, tuple_vec},
     roll,

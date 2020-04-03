@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+ - The builder API no longer uses a `Box` to avoid naming the RNG type.
+   Instead, generics and a new intermediary type, `RollBuilderWithRng`, are used.
+ - WebAssembly support is now an explicit Cargo "feature": `wasm`.
+ - The availability of the default thread RNG is now controlled by the `thread_rng` feature,
+   which is enabled by default.
 
 ## [0.7.0] - 2020-3-30
 ### Changed

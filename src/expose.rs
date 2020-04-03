@@ -61,7 +61,7 @@ pub fn tuple_vec(input: &str) -> Result<Vec<ExprTuple>, ParseError> {
 }
 /// Roll and sum a slice of tuples, in the form
 /// provided by this function's complement: `tuple_vec`
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "thread_rng")]
 pub fn roll_tuples(input: &[ExprTuple]) -> EResult {
     Ok(RollBuilder::new().with_tuples(input)?.into_roll()?.roll()?)
 }

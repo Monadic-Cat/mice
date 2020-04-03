@@ -34,7 +34,7 @@ use crate::{
 use std::convert::TryFrom;
 use thiserror::Error;
 
-use rand::{thread_rng, RngCore};
+use rand::{thread_rng, RngCore, rngs::ThreadRng};
 #[derive(Debug, Error)]
 pub enum BuildError {
     #[error("builder given no expression")]
@@ -52,13 +52,11 @@ impl From<BuildError> for Error {
 #[derive(Default)]
 pub struct RollBuilder {
     expression: Option<Expression>,
-    generator: Option<Box<dyn RngCore>>,
 }
 impl RollBuilder {
     pub fn new() -> RollBuilder {
         RollBuilder {
             expression: None,
-            generator: None,
         }
     }
     pub fn parse(mut self, input: &str) -> Result<RollBuilder, ParseError> {
@@ -83,26 +81,62 @@ impl RollBuilder {
     /// Until thread local storage is supported, the default
     /// RNG will not work- provide your own.
     #[allow(dead_code)]
-    pub fn with_rng(mut self, rng: Box<dyn RngCore>) -> RollBuilder {
-        self.generator = Some(rng);
-        self
+    pub fn with_rng<R: RngCore>(self, rng: R) -> RollBuilderWithRng<R> {
+        RollBuilderWithRng {
+            generator: rng,
+            expression: self.expression,
+        }
     }
-    pub fn into_roll(self) -> Result<Roll, BuildError> {
+    /// `into_roll()` can only be used without specifying an RNG
+    /// if the default `thread_rng` is supported.
+    #[cfg(feature = "thread_rng")]
+    pub fn into_roll(self) -> Result<Roll<ThreadRng>, BuildError> {
         Ok(Roll {
             expression: self.expression.ok_or(BuildError::NoExpression)?,
-            // DO NOT CONSTRUCT `ThreadRng` UNLESS IT IS REQUIRED.
-            // DOING SO MAY BREAK MICE AS MENTIONED ABOVE.
-            generator: self.generator.unwrap_or_else(|| Box::new(thread_rng())),
+            generator: thread_rng(),
         })
     }
 }
 
-pub struct Roll {
-    expression: Expression,
-    generator: Box<dyn RngCore>,
+pub struct RollBuilderWithRng<R: RngCore> {
+    expression: Option<Expression>,
+    generator: R,
+}
+impl<R: RngCore> RollBuilderWithRng<R> {
+    pub fn into_roll(self) -> Result<Roll<R>, BuildError> {
+        Ok(Roll {
+            expression: self.expression.ok_or(BuildError::NoExpression)?,
+            generator: self.generator,
+        })
+    }
+
+    // DUPLICATED CODE:
+    pub fn parse(mut self, input: &str) -> Result<Self, ParseError> {
+        let expression = wrap_dice(input)?;
+        self.expression = Some(expression);
+        Ok(self)
+    }
+    pub fn with_tuples(mut self, tuples: &[ExprTuple]) -> Result<Self, Error> {
+        let mut expression = Vec::new();
+        for x in tuples {
+            expression.push(Expr::try_from(*x)?)
+        }
+        self.expression = Some(expression);
+        Ok(self)
+    }
+    #[allow(dead_code)]
+    pub(crate) fn with_expression(mut self, expression: Expression) -> Self {
+        self.expression = Some(expression);
+        self
+    }
 }
 
-impl Roll {
+pub struct Roll<R: RngCore> {
+    expression: Expression,
+    generator: R,
+}
+
+impl<R: RngCore> Roll<R> {
     pub fn roll(&mut self) -> EResult {
         roll_expr_iter_with(&mut self.generator, self.expression.iter().copied())
     }

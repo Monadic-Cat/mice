@@ -33,15 +33,13 @@ mod post;
 use post::{EResult, EvaluatedTerm, RolledDie, TResult};
 pub use post::{ExpressionResult, FormatOptions};
 mod expose;
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "thread_rng")]
 pub use expose::{roll_tuples, tuple_vec};
 mod parse;
 use parse::{Die, Expr, Sign, Term};
 pub use parse::ParseError;
 pub mod builder;
 use builder::RollBuilder;
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
 mod display;
 pub mod prelude;
 pub mod util;
@@ -115,7 +113,7 @@ where
 ///   - The sum of all terms is too high
 ///   - The sum of all terms is too low
 ///   - Nonsense input
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "thread_rng")]
 pub fn roll(input: &str) -> EResult {
     Ok(RollBuilder::new().parse(input)?.into_roll()?.roll()?)
 }

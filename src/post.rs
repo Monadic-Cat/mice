@@ -3,27 +3,27 @@ use crate::parse::{Expr, Sign};
 use std::fmt::{Display, Formatter};
 use std::ops::Neg;
 use std::slice;
-#[cfg(target_arch = "wasm32")]
+#[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
 pub(crate) type TResult = Result<EvaluatedTerm, Error>;
 pub(crate) type EResult = Result<ExpressionResult, Error>;
 
 /// The result of evaluating a dice expression.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug, Clone)]
 pub struct ExpressionResult {
     /// Private field because `Expr`'s layout isn't final.
     pairs: Vec<(Expr, EvaluatedTerm)>,
     total: i64,
 }
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl ExpressionResult {
     /// Sum of all evaluated terms.
     pub fn total(&self) -> i64 {
         self.total
     }
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(feature = "wasm")]
     pub fn display(&self) -> String {
         format!("{}", self)
     }
@@ -35,6 +35,7 @@ impl ExpressionResult {
     pub(crate) fn new(pairs: Vec<(Expr, EvaluatedTerm)>, total: i64) -> Self {
         Self { pairs, total }
     }
+    // TODO: Bind *this* for wasm?
     /// Afford some control of the output to the user,
     /// by allowing the specification of recognized customizations.
     pub fn format(&self, options: FormatOptions) -> String {
