@@ -14,16 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - The availability of the default thread RNG is now controlled by the `thread_rng` feature,
    which is enabled by default.
 
-## [0.7.0] - 2020-3-30
+## [0.7.0] - 2020-03-30
 ### Changed
  - `tuple_vec` now uses the more specific `ParseError` error type.
 ### Fixed
  - Sign factoring on single die terms
 
-## [0.6.1] - 2020-3-30 [YANKED]
+## [0.6.1] - 2020-03-30 [YANKED]
 I accidentally published a planned breaking change together with a bugfix.
 
-## [0.6.0]
+## [0.6.0] - 2020-01-1
 ### Changed
  - Rename `RollError` to `Error`.
 ### Fixed
@@ -31,19 +31,19 @@ I accidentally published a planned breaking change together with a bugfix.
 ### Added
  - Expose `ParseError` so fine grained error handling on the builder is less bad.
 
-## [0.5.3]
+## [0.5.3] - 2019-09-15
 ### Fixed
  - Actually fix the thing from `0.5.2`
 
-## [0.5.2]
+## [0.5.2] - 2019-09-15
 ### Fixed
  - Arithmetic formatter incorrectly discarded negatives.
 
-## [0.5.1]
+## [0.5.1] - 2019-09-14
 ### Fixed
  - `expose` module incorrectly accepted d0 terms. Fixed.
 
-## [0.5.0]
+## [0.5.0] - 2019-09-9
 ### Changed
  - Changed default `ExpressionResult` format.
  - Names of `tupl_vec` and `roll_tupls` to
@@ -52,7 +52,7 @@ I accidentally published a planned breaking change together with a bugfix.
  - `FormatOptions`, to control the formatting of
    dice expression results.
 
-## [0.4.0]
+## [0.4.0] - 2019-08-27
 ### Added
  - Interface for more involved operations: `builder::*`.
  - WASM compatibility through `RollBuilder`.
