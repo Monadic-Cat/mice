@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - `tuple_vec` now uses the more specific `ParseError` error type.
 ### Fixed
  - Sign factoring on single die terms
+   **(bugfix from 0.6.1)**
+
+## [0.6.2] - 2020-04-03
+### Fixed
+ - Sign factoring on single die terms
+   **(bugfix from 0.6.1)**
 
 ## [0.6.1] - 2020-03-30 [YANKED]
 I accidentally published a planned breaking change together with a bugfix.
@@ -30,6 +36,11 @@ I accidentally published a planned breaking change together with a bugfix.
  - `#[cfg]` away unusable functions on `wasm32` targets.
 ### Added
  - Expose `ParseError` so fine grained error handling on the builder is less bad.
+
+## [0.5.4] - 2020-03-30
+### Fixed
+ - Sign factoring on single die terms
+   **(Backported from 0.6.1)**
 
 ## [0.5.3] - 2019-09-15
 ### Fixed
@@ -135,8 +146,10 @@ but there's no good reason to use it.
 [Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.8.0...HEAD
 [0.8.0]: https://github.com/Monadic-Cat/mice/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/Monadic-Cat/mice/compare/0.6.1...0.7.0
+[0.6.2]: https://github.com/Monadic-Cat/mice/compare/0.6.0...0.6.2
 [0.6.1]: https://github.com/Monadic-Cat/mice/compare/0.6.0...0.6.1
 [0.6.0]: https://github.com/Monadic-Cat/mice/compare/0.5.3...0.6.0
+[0.5.4]: https://github.com/Monadic-Cat/mice/compare/0.5.3...0.5.4
 [0.5.3]: https://github.com/Monadic-Cat/mice/compare/0.5.2...0.5.3
 [0.5.2]: https://github.com/Monadic-Cat/mice/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/Monadic-Cat/mice/compare/0.5.0...0.5.1
