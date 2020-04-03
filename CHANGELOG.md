@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.8.0] - 2020-04-3
+## [0.8.0] - 2020-04-03
 ### Changed
  - The builder API no longer uses a `Box` to avoid naming the RNG type.
    Instead, generics and a new intermediary type, `RollBuilderWithRng`, are used.
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.1] - 2020-03-30 [YANKED]
 I accidentally published a planned breaking change together with a bugfix.
 
-## [0.6.0] - 2020-01-1
+## [0.6.0] - 2020-01-01
 ### Changed
  - Rename `RollError` to `Error`.
 ### Fixed
@@ -43,7 +43,7 @@ I accidentally published a planned breaking change together with a bugfix.
 ### Fixed
  - `expose` module incorrectly accepted d0 terms. Fixed.
 
-## [0.5.0] - 2019-09-9
+## [0.5.0] - 2019-09-09
 ### Changed
  - Changed default `ExpressionResult` format.
  - Names of `tupl_vec` and `roll_tupls` to
