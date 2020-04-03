@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.8.0] - 2020-04-3
 ### Changed
  - The builder API no longer uses a `Box` to avoid naming the RNG type.
    Instead, generics and a new intermediary type, `RollBuilderWithRng`, are used.
@@ -130,7 +132,8 @@ but there's no good reason to use it.
  - `roll_dice`, a nice to have function for
    evaluating dice expression.
 
-[Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.7.0...HEAD
+[Unreleased]: https://github.com/Monadic-Cat/mice/compare/0.8.0...HEAD
+[0.8.0]: https://github.com/Monadic-Cat/mice/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/Monadic-Cat/mice/compare/0.6.1...0.7.0
 [0.6.1]: https://github.com/Monadic-Cat/mice/compare/0.6.0...0.6.1
 [0.6.0]: https://github.com/Monadic-Cat/mice/compare/0.5.3...0.6.0
