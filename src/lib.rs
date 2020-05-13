@@ -74,6 +74,9 @@ pub mod unstable {
     pub mod parse {
         pub use crate::parse::*;
     }
+    pub mod util {
+        pub use crate::util::unstable::*;
+    }
 }
 
 fn roll_die_with<R>(a: &Die, rng: &mut R) -> Result<RolledDie, Error>
