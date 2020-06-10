@@ -34,7 +34,8 @@ use post::{EResult, EvaluatedTerm, RolledDie, TResult};
 pub use post::{ExpressionResult, FormatOptions};
 mod expose;
 #[cfg(feature = "thread_rng")]
-pub use expose::{roll_tuples, tuple_vec};
+pub use expose::roll_tuples;
+pub use expose::tuple_vec;
 mod parse;
 use parse::{Die, Expr, Sign, Term};
 pub use parse::ParseError;
