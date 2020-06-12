@@ -30,16 +30,16 @@ impl ExpressionResult {
     pub(crate) fn pairs(&self) -> &Vec<(Expr, EvaluatedTerm)> {
         &self.pairs
     }
-}
-impl ExpressionResult {
-    pub(crate) fn new(pairs: Vec<(Expr, EvaluatedTerm)>, total: i64) -> Self {
-        Self { pairs, total }
-    }
     // TODO: Bind *this* for wasm?
     /// Afford some control of the output to the user,
     /// by allowing the specification of recognized customizations.
     pub fn format(&self, options: FormatOptions) -> String {
         crate::display::format(self, options)
+    }
+}
+impl ExpressionResult {
+    pub(crate) fn new(pairs: Vec<(Expr, EvaluatedTerm)>, total: i64) -> Self {
+        Self { pairs, total }
     }
 }
 
@@ -81,6 +81,7 @@ pub(crate) enum TermSeparator {
 /// println!("{}", roll("2d6 + 3")?.format(format));
 /// # Ok::<(), MiceError>(())
 /// ```
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 #[derive(Debug, Clone, Copy)]
 pub struct FormatOptions {
     pub(crate) ignore_sign: bool,
@@ -90,6 +91,7 @@ pub struct FormatOptions {
     pub(crate) term_parentheses: bool,
     pub(crate) term_list_parentheses: bool,
 }
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl FormatOptions {
     /// Obtain a new `FormatOptions` object.
     pub fn new() -> FormatOptions {

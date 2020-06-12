@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+ - `wasm_bindgen` on `FormatOptions` and `.format` on `ExpressionResult`.
+### Changed
+ - `tuple_vec` is now exposed regardless of the `thread_rng` feature being enabled or not.
 
 ## [0.8.0] - 2020-04-03
 ### Changed
