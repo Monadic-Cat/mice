@@ -67,7 +67,7 @@ fn format_dice_term(prior: &Expr, val: &EvaluatedTerm, f: FormatOptions) -> Stri
     } = f;
     match prior.term {
         Term::Constant(_) => val.format(f),
-        Term::Die(_) => {
+        Term::Dice(_) => {
             let dice_term = format!("{} → {}", prior.format(f), val.format(f));
             if term_parentheses {
                 format!("({})", dice_term)

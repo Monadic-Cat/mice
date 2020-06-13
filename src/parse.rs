@@ -23,7 +23,7 @@ pub enum ParseError {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub(crate) struct Die {
+pub(crate) struct DiceTerm {
     /// Negative numbers of dice are
     /// incorrect, but matching integer
     /// sizes is helpful.
@@ -32,30 +32,42 @@ pub(crate) struct Die {
     /// but matching integer sizes are helpful.
     pub(crate) size: i64,
 }
-impl Die {
+impl DiceTerm {
     /// Creation of a `Die` may fail if:
     ///  - number of sides < 1
     ///  - number of dice  < 0
-    pub(crate) fn new(number: i64, size: i64) -> Result<Die, Error> {
+    pub(crate) fn new(number: i64, size: i64) -> Result<Self, Error> {
         // Forbid d0 and below. d1 is weird, but it
         // has a correct interpretation.
         if size < 1 || number < 0 {
             Err(Error::InvalidDie)
         } else {
-            Ok(Die { number, size })
+            Ok(DiceTerm { number, size })
         }
     }
 }
 
 #[derive(Debug, Copy, Clone)]
+pub(crate) struct ConstantTerm {
+    /// This is not allowed to exceed what would be the u63 max,
+    /// and is not allowed to be less than zero.
+    value: i64,
+}
+impl Display for ConstantTerm {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.value)
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
 pub(crate) enum Term {
-    Die(Die),
+    Dice(DiceTerm),
     Constant(i64),
 }
 impl Display for Term {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Term::Die(x) => write!(f, "{}d{}", x.number, x.size),
+            Term::Dice(x) => write!(f, "{}d{}", x.number, x.size),
             Term::Constant(x) => write!(f, "{}", x),
         }
     }
@@ -145,13 +157,13 @@ fn integer(input: &str) -> IResult<&str, i64> {
     Ok((input, i))
 }
 
-fn die(input: &str) -> IResult<&str, Term> {
+fn die(input: &str) -> IResult<&str, DiceTerm> {
     // number of dice : [integer]
     // separator      : "d"
     // size of dice   : integer
     let (input, (number, _, size)) = tuple((opt(integer), tag("d"), integer))(input)?;
     let number = number.unwrap_or(1);
-    Ok((input, Term::Die(Die { number, size })))
+    Ok((input, DiceTerm { number, size }))
 }
 
 fn addition(input: &str) -> IResult<&str, Sign> {
@@ -176,9 +188,9 @@ fn separator(input: &str) -> IResult<&str, Sign> {
     Ok((input, t.1))
 }
 
-fn constant(input: &str) -> IResult<&str, Term> {
+fn constant(input: &str) -> IResult<&str, ConstantTerm> {
     let i = integer(input)?;
-    Ok((i.0, Term::Constant(i.1)))
+    Ok((i.0, ConstantTerm { value: i.1 }))
 }
 
 // /// Use like this, where map is a HashMap: `|x| variable(map, x)`
@@ -189,11 +201,14 @@ fn constant(input: &str) -> IResult<&str, Term> {
 // }
 
 fn term(input: &str) -> IResult<&str, Term> {
-    alt((die, constant))(input)
+    alt((
+        |x| die(x).map(|(i, d)| (i, Term::Dice(d))),
+        |x| constant(x).map(|(i, c)| (i, Term::Constant(c.value))),
+    ))(input)
 }
 
 fn dice(input: &str) -> IResult<&str, Expression> {
-    // [(+/-)] die ((+/-) die)*
+    // [(+/-)] dice ((+/-) dice)*
     let (input, (sign, term, terms)) =
         tuple((opt(separator), term, many0(tuple((separator, term)))))(input)?;
     let sign = sign.unwrap_or(Sign::Positive);

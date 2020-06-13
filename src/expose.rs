@@ -5,7 +5,7 @@ use std::convert::TryFrom;
 use crate::{
     builder::RollBuilder,
     error::Error,
-    parse::{wrap_dice, Die, Expr, Sign, Term, ParseError},
+    parse::{wrap_dice, DiceTerm, Expr, Sign, Term, ParseError},
     post::EResult,
 };
 pub(crate) type ExprTuple = (i64, i64);
@@ -22,7 +22,7 @@ impl TryFrom<ExprTuple> for Expr {
         };
         Ok(Self {
             term: if s > 1 {
-                Term::Die(Die::new(n, s)?)
+                Term::Dice(DiceTerm::new(n, s)?)
             } else if s == 1 {
                 Term::Constant(n)
             } else {
@@ -35,7 +35,7 @@ impl TryFrom<ExprTuple> for Expr {
 impl From<Expr> for ExprTuple {
     fn from(e: Expr) -> ExprTuple {
         let t = match e.term {
-            Term::Die(x) => (x.number, x.size),
+            Term::Dice(x) => (x.number, x.size),
             Term::Constant(x) => (x, 1),
         };
         match e.sign {

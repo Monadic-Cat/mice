@@ -37,7 +37,7 @@ mod expose;
 pub use expose::roll_tuples;
 pub use expose::tuple_vec;
 mod parse;
-use parse::{Die, Expr, Sign, Term};
+use parse::{DiceTerm, Expr, Sign, Term};
 pub use parse::ParseError;
 pub mod builder;
 use builder::RollBuilder;
@@ -45,7 +45,7 @@ mod display;
 pub mod prelude;
 pub mod util;
 
-fn roll_die_with<R>(a: &Die, rng: &mut R) -> Result<RolledDie, Error>
+fn roll_die_with<R>(a: &DiceTerm, rng: &mut R) -> Result<RolledDie, Error>
 where
     R: Rng,
 {
@@ -85,7 +85,7 @@ where
     R: Rng,
 {
     let t = match a.term {
-        Term::Die(x) => roll_die_with(&x, rng).into(),
+        Term::Dice(x) => roll_die_with(&x, rng).into(),
         Term::Constant(x) => MyResult::Ok(EvaluatedTerm::Constant(x)),
     };
     // This can't trigger a panic with any inputs as of now,
@@ -160,7 +160,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{roll, Die};
+    use crate::{roll, DiceTerm};
     #[test]
     fn arithmetic() {
         assert_eq!(roll("5 + 3").unwrap().total(), 8);
@@ -169,7 +169,7 @@ mod tests {
     #[test]
     fn dice() {
         let mut good = true;
-        match Die::new(0, 0) {
+        match DiceTerm::new(0, 0) {
             Ok(_) => good = false,
             Err(_) => (),
         }
