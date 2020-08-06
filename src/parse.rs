@@ -157,13 +157,27 @@ fn integer(input: &str) -> IResult<&str, i64> {
     Ok((input, i))
 }
 
-fn die(input: &str) -> IResult<&str, DiceTerm> {
+#[derive(Error, Debug)]
+#[error("invalid die")]
+struct InvalidDie;
+
+type MResult<I, O, E = (I, ::nom::error::ErrorKind)> = Result<(I, Result<O, InvalidDie>), ::nom::Err<E>>;
+fn die(input: &str) -> MResult<&str, DiceTerm> {
     // number of dice : [integer]
     // separator      : "d"
     // size of dice   : integer
     let (input, (number, _, size)) = tuple((opt(integer), tag("d"), integer))(input)?;
     let number = number.unwrap_or(1);
-    Ok((input, DiceTerm { number, size }))
+    // Note that since we use the bare DiceTerm constructor,
+    // we need to make certain no invalid dice are created.
+    // That means `number` needs to be >= 0, and `size` needs to be >= 1.
+    // Given that `integer` does not create integers less than zero,
+    // the only check we need to do here is `size != 0`.
+    if size != 0 {
+        Ok((input, Ok(DiceTerm { number, size })))
+    } else {
+        Ok((input, Err(InvalidDie)))
+    }
 }
 
 fn addition(input: &str) -> IResult<&str, Sign> {
@@ -200,23 +214,32 @@ fn constant(input: &str) -> IResult<&str, ConstantTerm> {
 //     Ok((input, Term::Constant(v)))
 // }
 
-fn term(input: &str) -> IResult<&str, Term> {
+fn term(input: &str) -> MResult<&str, Term> {
     alt((
-        |x| die(x).map(|(i, d)| (i, Term::Dice(d))),
-        |x| constant(x).map(|(i, c)| (i, Term::Constant(c.value))),
+        |x| die(x).map(|(i, d)| (i, d.map(|x| Term::Dice(x)))),
+        |x| constant(x).map(|(i, c)| (i, Ok(Term::Constant(c.value)))),
     ))(input)
 }
 
-fn dice(input: &str) -> IResult<&str, Expression> {
+fn dice(input: &str) -> MResult<&str, Expression> {
     // [(+/-)] dice ((+/-) dice)*
     let (input, (sign, term, terms)) =
         tuple((opt(separator), term, many0(tuple((separator, term)))))(input)?;
     let sign = sign.unwrap_or(Sign::Positive);
-    let mut expression = vec![Expr { term, sign }];
-    for (sign, term) in terms {
-        expression.push(Expr { term, sign });
+    match term {
+        Err(e) => return Ok((input, Err(e))),
+        Ok(term) => {
+            let mut expression = vec![Expr { term, sign }];
+            for (sign, term) in terms {
+                match term {
+                    Ok(term) => expression.push(Expr { term, sign }),
+                    Err(e) => return Ok((input, Err(e))),
+                }
+            }
+            Ok((input, Ok(expression)))
+        }
     }
-    Ok((input, expression))
+
 }
 
 /// Wrap up getting errors from parsing a dice expression.
@@ -229,6 +252,9 @@ pub(crate) fn wrap_dice(input: &str) -> Result<Expression, ParseError> {
     if !input.is_empty() {
         Err(ParseError::InvalidExpression)
     } else {
-        Ok(e)
+        match e {
+            Ok(x) => Ok(x),
+            Err(InvalidDie) => Err(ParseError::InvalidExpression),
+        }
     }
 }

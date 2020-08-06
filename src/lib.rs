@@ -55,8 +55,6 @@ where
             parts: (0..a.number).map(|_| 1).collect(),
             sign_part: Sign::Positive,
         })
-    } else if a.size < 1 {
-        Err(Error::InvalidDie)
     } else {
         let mut total: i64 = 0;
         let mut parts = Vec::new();
