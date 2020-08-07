@@ -166,13 +166,9 @@ mod tests {
     }
     #[test]
     fn dice() {
-        let mut good = true;
         match DiceTerm::new(0, 0) {
-            Ok(_) => good = false,
+            Ok(_) => panic!(),
             Err(_) => (),
-        }
-        if !good {
-            panic!()
         }
     }
 }
