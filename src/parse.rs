@@ -166,8 +166,14 @@ impl From<InvalidDie> for ParseError {
     }
 }
 
-type MResult<I, O, E = (I, ::nom::error::ErrorKind)> = Result<(I, Result<O, InvalidDie>), ::nom::Err<E>>;
-macro_rules! tryM {
+type PResult<I, O, PE, E = (I, ::nom::error::ErrorKind)> = Result<(I, Result<O, PE>), ::nom::Err<E>>;
+fn okay<I, T, PE, E>(input: I, exp: T) -> Result<(I, Result<T, PE>), E> {
+    Ok((input, Ok(exp)))
+}
+fn purr<I, T, PE, E>(input: I, err: PE) -> Result<(I, Result<T, PE>), E> {
+    Ok((input, Err(err)))
+}
+macro_rules! trip {
     ($in:expr, $exp:expr) => {
         match $exp {
             Ok(x) => x,
@@ -175,7 +181,7 @@ macro_rules! tryM {
         }
     }
 }
-fn die(input: &str) -> MResult<&str, DiceTerm> {
+fn die(input: &str) -> PResult<&str, DiceTerm, InvalidDie> {
     // number of dice : [integer]
     // separator      : "d"
     // size of dice   : integer
@@ -187,9 +193,9 @@ fn die(input: &str) -> MResult<&str, DiceTerm> {
     // Given that `integer` does not create integers less than zero,
     // the only check we need to do here is `size != 0`.
     if size != 0 {
-        Ok((input, Ok(DiceTerm { number, size })))
+        okay(input, DiceTerm { number, size })
     } else {
-        Ok((input, Err(InvalidDie)))
+        purr(input, InvalidDie)
     }
 }
 
@@ -227,24 +233,24 @@ fn constant(input: &str) -> IResult<&str, ConstantTerm> {
 //     Ok((input, Term::Constant(v)))
 // }
 
-fn term(input: &str) -> MResult<&str, Term> {
+fn term(input: &str) -> PResult<&str, Term, InvalidDie> {
     alt((
         |x| die(x).map(|(i, d)| (i, d.map(|x| Term::Dice(x)))),
         |x| constant(x).map(|(i, c)| (i, Ok(Term::Constant(c.value)))),
     ))(input)
 }
 
-fn dice(input: &str) -> MResult<&str, Expression> {
+fn dice(input: &str) -> PResult<&str, Expression, InvalidDie> {
     // [(+/-)] dice ((+/-) dice)*
     let (input, (sign, term, terms)) =
         tuple((opt(separator), term, many0(tuple((separator, term)))))(input)?;
     let sign = sign.unwrap_or(Sign::Positive);
-    let term = tryM!(input, term);
+    let term = trip!(input, term);
     let mut expression = vec![Expr { term, sign }];
     for (sign, term) in terms {
-        expression.push(Expr { term: tryM!(input, term), sign })
+        expression.push(Expr { term: trip!(input, term), sign })
     }
-    Ok((input, Ok(expression)))
+    okay(input, expression)
 }
 
 /// Wrap up getting errors from parsing a dice expression.
