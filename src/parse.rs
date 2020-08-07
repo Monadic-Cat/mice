@@ -162,6 +162,14 @@ fn integer(input: &str) -> IResult<&str, i64> {
 struct InvalidDie;
 
 type MResult<I, O, E = (I, ::nom::error::ErrorKind)> = Result<(I, Result<O, InvalidDie>), ::nom::Err<E>>;
+macro_rules! tryM {
+    ($in:expr, $exp:expr) => {
+        match $exp {
+            Ok(x) => x,
+            Err(e) => return Ok(($in, Err(e))),
+        }
+    }
+}
 fn die(input: &str) -> MResult<&str, DiceTerm> {
     // number of dice : [integer]
     // separator      : "d"
@@ -226,20 +234,12 @@ fn dice(input: &str) -> MResult<&str, Expression> {
     let (input, (sign, term, terms)) =
         tuple((opt(separator), term, many0(tuple((separator, term)))))(input)?;
     let sign = sign.unwrap_or(Sign::Positive);
-    match term {
-        Err(e) => return Ok((input, Err(e))),
-        Ok(term) => {
-            let mut expression = vec![Expr { term, sign }];
-            for (sign, term) in terms {
-                match term {
-                    Ok(term) => expression.push(Expr { term, sign }),
-                    Err(e) => return Ok((input, Err(e))),
-                }
-            }
-            Ok((input, Ok(expression)))
-        }
+    let term = tryM!(input, term);
+    let mut expression = vec![Expr { term, sign }];
+    for (sign, term) in terms {
+        expression.push(Expr { term: tryM!(input, term), sign })
     }
-
+    Ok((input, Ok(expression)))
 }
 
 /// Wrap up getting errors from parsing a dice expression.
