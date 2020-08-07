@@ -160,6 +160,11 @@ fn integer(input: &str) -> IResult<&str, i64> {
 #[derive(Error, Debug)]
 #[error("invalid die")]
 struct InvalidDie;
+impl From<InvalidDie> for ParseError {
+    fn from(_: InvalidDie) -> Self {
+        Self::InvalidExpression
+    }
+}
 
 type MResult<I, O, E = (I, ::nom::error::ErrorKind)> = Result<(I, Result<O, InvalidDie>), ::nom::Err<E>>;
 macro_rules! tryM {
@@ -252,9 +257,6 @@ pub(crate) fn wrap_dice(input: &str) -> Result<Expression, ParseError> {
     if !input.is_empty() {
         Err(ParseError::InvalidExpression)
     } else {
-        match e {
-            Ok(x) => Ok(x),
-            Err(InvalidDie) => Err(ParseError::InvalidExpression),
-        }
+        e.map_err(|e| e.into())
     }
 }
