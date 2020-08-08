@@ -6,7 +6,6 @@ use std::slice;
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
-pub(crate) type TResult = Result<EvaluatedTerm, Error>;
 pub(crate) type EResult = Result<ExpressionResult, Error>;
 
 /// The result of evaluating a dice expression.

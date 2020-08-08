@@ -5,14 +5,14 @@ use std::convert::TryFrom;
 use crate::{
     builder::RollBuilder,
     error::Error,
-    parse::{wrap_dice, DiceTerm, Expr, Sign, Term, ParseError},
+    parse::{wrap_dice, DiceTerm, Expr, Sign, Term, ParseError, InvalidDie},
     post::EResult,
 };
 pub(crate) type ExprTuple = (i64, i64);
 
 impl TryFrom<ExprTuple> for Expr {
-    type Error = Error;
-    fn try_from(tup: ExprTuple) -> Result<Self, Error> {
+    type Error = InvalidDie;
+    fn try_from(tup: ExprTuple) -> Result<Self, InvalidDie> {
         let (mut n, s) = tup;
         let sign = if n < 0 {
             n = -n;
@@ -21,12 +21,10 @@ impl TryFrom<ExprTuple> for Expr {
             Sign::Positive
         };
         Ok(Self {
-            term: if s > 1 {
-                Term::Dice(DiceTerm::new(n, s)?)
-            } else if s == 1 {
-                Term::Constant(n)
-            } else {
-                return Err(Error::InvalidDie);
+            term: match s.cmp(&1) {
+                ::core::cmp::Ordering::Less => Term::Dice(DiceTerm::new(n, s)?),
+                ::core::cmp::Ordering::Equal => Term::Constant(n),
+                ::core::cmp::Ordering::Greater => return Err(InvalidDie),
             },
             sign,
         })
@@ -63,5 +61,5 @@ pub fn tuple_vec(input: &str) -> Result<Vec<ExprTuple>, ParseError> {
 /// provided by this function's complement: `tuple_vec`
 #[cfg(feature = "thread_rng")]
 pub fn roll_tuples(input: &[ExprTuple]) -> EResult {
-    Ok(RollBuilder::new().with_tuples(input)?.into_roll()?.roll()?)
+    Ok(RollBuilder::new().with_tuples(input).map_err(|e| Error::from(ParseError::from(e)))?.into_roll().unwrap().roll()?)
 }

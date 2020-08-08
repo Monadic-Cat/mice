@@ -1,5 +1,4 @@
 use crate::parse::ParseError;
-use crate::post::{EvaluatedTerm, TResult};
 // use std::error::Error as StdError;
 use std::ops::Neg;
 use thiserror::Error;
@@ -12,28 +11,34 @@ pub enum Error {
     InvalidDie,
     /// The sum of terms is greater than what an `i64` can hold
     #[error("sum is too high for `i64`")]
-    OverflowPositive,
+    OverflowPositive(#[from] crate::OverflowPositive),
     /// The sum of terms is lower than what an `i64` can hold
     #[error("sum is too low for `i64`")]
-    OverflowNegative,
+    OverflowNegative(#[from] crate::OverflowNegative),
     /// The expression evaluated isn't a valid dice expression
     #[error("you've specified an invalid dice expression")]
-    InvalidExpression,
+    InvalidExpression(#[from] ParseError),
 }
+
+macro_rules! impl_zst_neg {
+    ($in:ty => $out:path) => {
+        impl Neg for $in {
+            type Output = $out;
+            fn neg(self) -> Self::Output {
+                $out
+            }
+        }
+    }
+}
+impl_zst_neg!(crate::OverflowPositive => crate::OverflowNegative);
+impl_zst_neg!(crate::OverflowNegative => crate::OverflowPositive);
 impl Neg for Error {
     type Output = Self;
     fn neg(self) -> Self::Output {
         match self {
-            Error::OverflowPositive => Error::OverflowNegative,
-            Error::OverflowNegative => Error::OverflowPositive,
+            Error::OverflowPositive(x) => Error::OverflowNegative(-x),
+            Error::OverflowNegative(x) => Error::OverflowPositive(-x),
             x => x,
-        }
-    }
-}
-impl From<ParseError> for Error {
-    fn from(e: ParseError) -> Self {
-        match e {
-            ParseError::InvalidExpression => Error::InvalidExpression,
         }
     }
 }
@@ -52,9 +57,8 @@ impl<T: Neg<Output = T>, E: Neg<Output = E>> Neg for MyResult<T, E> {
         }
     }
 }
-type MTResult = MyResult<EvaluatedTerm, Error>;
-impl From<MTResult> for TResult {
-    fn from(r: MTResult) -> TResult {
+impl<T, E> From<MyResult<T, E>> for Result<T, E> {
+    fn from(r: MyResult<T, E>) -> Result<T, E> {
         match r {
             MyResult::Ok(x) => Ok(x),
             MyResult::Err(x) => Err(x),

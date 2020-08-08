@@ -27,9 +27,9 @@
 // pub use crate::post::FormatOptions;
 use crate::{
     expose::ExprTuple,
-    parse::{wrap_dice, Expr, Expression, ParseError},
+    parse::{wrap_dice, Expr, Expression, ParseError, InvalidDie},
     post::EResult,
-    roll_expr_iter_with, Error,
+    roll_expr_iter_with,
 };
 use std::convert::TryFrom;
 use thiserror::Error;
@@ -39,14 +39,6 @@ use rand::{thread_rng, RngCore, rngs::ThreadRng};
 pub enum BuildError {
     #[error("builder given no expression")]
     NoExpression,
-}
-
-impl From<BuildError> for Error {
-    fn from(e: BuildError) -> Error {
-        match e {
-            BuildError::NoExpression => Error::InvalidExpression,
-        }
-    }
 }
 
 #[derive(Default)]
@@ -64,7 +56,7 @@ impl RollBuilder {
         self.expression = Some(expression);
         Ok(self)
     }
-    pub fn with_tuples(mut self, tuples: &[ExprTuple]) -> Result<RollBuilder, Error> {
+    pub fn with_tuples(mut self, tuples: &[ExprTuple]) -> Result<RollBuilder, InvalidDie> {
         let mut expression = Vec::new();
         for x in tuples {
             expression.push(Expr::try_from(*x)?)
@@ -116,7 +108,7 @@ impl<R: RngCore> RollBuilderWithRng<R> {
         self.expression = Some(expression);
         Ok(self)
     }
-    pub fn with_tuples(mut self, tuples: &[ExprTuple]) -> Result<Self, Error> {
+    pub fn with_tuples(mut self, tuples: &[ExprTuple]) -> Result<Self, InvalidDie> {
         let mut expression = Vec::new();
         for x in tuples {
             expression.push(Expr::try_from(*x)?)

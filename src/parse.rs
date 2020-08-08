@@ -1,5 +1,4 @@
 use crate::post::FormatOptions;
-use crate::Error;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
@@ -36,11 +35,11 @@ impl DiceTerm {
     /// Creation of a `Die` may fail if:
     ///  - number of sides < 1
     ///  - number of dice  < 0
-    pub(crate) fn new(number: i64, size: i64) -> Result<Self, Error> {
+    pub(crate) fn new(number: i64, size: i64) -> Result<Self, InvalidDie> {
         // Forbid d0 and below. d1 is weird, but it
         // has a correct interpretation.
         if size < 1 || number < 0 {
-            Err(Error::InvalidDie)
+            Err(InvalidDie)
         } else {
             Ok(DiceTerm { number, size })
         }
@@ -159,7 +158,7 @@ fn integer(input: &str) -> IResult<&str, i64> {
 
 #[derive(Error, Debug)]
 #[error("invalid die")]
-struct InvalidDie;
+pub struct InvalidDie;
 impl From<InvalidDie> for ParseError {
     fn from(_: InvalidDie) -> Self {
         Self::InvalidExpression
@@ -235,7 +234,7 @@ fn constant(input: &str) -> IResult<&str, ConstantTerm> {
 
 fn term(input: &str) -> PResult<&str, Term, InvalidDie> {
     alt((
-        |x| die(x).map(|(i, d)| (i, d.map(|x| Term::Dice(x)))),
+        |x| die(x).map(|(i, d)| (i, d.map(Term::Dice))),
         |x| constant(x).map(|(i, c)| (i, Ok(Term::Constant(c.value)))),
     ))(input)
 }

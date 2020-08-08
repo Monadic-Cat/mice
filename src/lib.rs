@@ -30,7 +30,7 @@ mod error;
 pub use error::Error;
 use error::MyResult;
 mod post;
-use post::{EResult, EvaluatedTerm, RolledDie, TResult};
+use post::{EResult, EvaluatedTerm, RolledDie};
 pub use post::{ExpressionResult, FormatOptions};
 mod expose;
 #[cfg(feature = "thread_rng")]
@@ -44,8 +44,38 @@ use builder::RollBuilder;
 mod display;
 pub mod prelude;
 pub mod util;
-
-fn roll_die_with<R>(a: &DiceTerm, rng: &mut R) -> Result<RolledDie, Error>
+#[derive(::thiserror::Error, Debug, Clone, Copy)]
+#[error("sum is too high for `i64`")]
+pub struct OverflowPositive;
+#[derive(::thiserror::Error, Debug, Clone, Copy)]
+#[error("sum is too low for `i64`")]
+pub struct OverflowNegative;
+#[derive(::thiserror::Error, Debug, Clone, Copy)]
+enum Overflow {
+    #[error(transparent)]
+    Positive(#[from] OverflowPositive),
+    #[error(transparent)]
+    Negative(#[from] OverflowNegative),
+}
+impl From<Overflow> for Error {
+    fn from(o: Overflow) -> Self {
+        match o {
+            Overflow::Positive(x) => Self::OverflowPositive(x),
+            Overflow::Negative(x) => Self::OverflowNegative(x),
+        }
+    }
+}
+impl ::core::ops::Neg for Overflow {
+    type Output = Overflow;
+    fn neg(self) -> Self::Output {
+        use Overflow::*;
+        match self {
+            Positive(x) => Negative(-x),
+            Negative(x) => Positive(-x),
+        }
+    }
+}
+fn roll_die_with<R>(a: &DiceTerm, rng: &mut R) -> Result<RolledDie, OverflowPositive>
 where
     R: Rng,
 {
@@ -67,7 +97,7 @@ where
             } else {
                 random = rng.gen();
             }
-            total = total.checked_add(random).ok_or(Error::OverflowPositive)?;
+            total = total.checked_add(random).ok_or(OverflowPositive)?;
             parts.push(random);
         }
         Ok(RolledDie {
@@ -78,11 +108,11 @@ where
     }
 }
 
-fn eval_term_with<R>(a: &Expr, rng: &mut R) -> TResult
+fn eval_term_with<R>(a: &Expr, rng: &mut R) -> Result<EvaluatedTerm, Overflow>
 where
     R: Rng,
 {
-    let t = match a.term {
+    let t: MyResult<_, Overflow> = match a.term {
         Term::Dice(x) => roll_die_with(&x, rng).into(),
         Term::Constant(x) => MyResult::Ok(EvaluatedTerm::Constant(x)),
     };
@@ -114,7 +144,7 @@ where
 ///   - Nonsense input
 #[cfg(feature = "thread_rng")]
 pub fn roll(input: &str) -> EResult {
-    Ok(RollBuilder::new().parse(input)?.into_roll()?.roll()?)
+    Ok(RollBuilder::new().parse(input)?.into_roll().unwrap().roll()?)
 }
 
 fn try_roll_expr_iter_with<I, R>(rng: &mut R, input: I) -> EResult
@@ -132,9 +162,9 @@ where
                 let res_val = res.value();
                 pairs.push((x, res));
                 total = total.checked_add(res_val).ok_or(if res_val > 0 {
-                    Error::OverflowPositive
+                    Error::OverflowPositive(OverflowPositive)
                 } else {
-                    Error::OverflowNegative
+                    Error::OverflowNegative(OverflowNegative)
                 })?;
             }
             Err(x) => return Err(x),
