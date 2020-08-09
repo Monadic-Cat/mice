@@ -116,13 +116,8 @@ where
         Term::Dice(x) => roll_die_with(&x, rng).into(),
         Term::Constant(x) => MyResult::Ok(EvaluatedTerm::Constant(x)),
     };
-    // This can't trigger a panic with any inputs as of now,
-    // but that may change. Switch to checked negation at some point.
-    // This currently cannot panic because the maximum permitted
-    // input is the `i64` positive max.
-    // This could panic if `t` were the `i64` negative max.
-    // See the `parse` module for the implementation of `Sign::mul`.
-    // I suggest providing a `Sign::checked_mul` method for this usage.
+    // No positive number can overflow via negation.
+    // Since terms are purely positive, this will never overflow.
     (a.sign * t).into()
 }
 
