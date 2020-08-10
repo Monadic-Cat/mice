@@ -137,7 +137,44 @@ impl Display for Expr {
     }
 }
 
-pub(crate) type Expression = Vec<Expr>;
+pub struct Expression {
+    exprs: Vec<Expr>,
+}
+impl Expression {
+    pub(crate) fn new(exprs: Vec<Expr>) -> Self {
+        Expression { exprs }
+    }
+    pub(crate) fn iter(&self) -> ExpressionRefIterator<'_> {
+        ExpressionRefIterator {
+            internal_iterator: self.exprs.iter(),
+        }
+    }
+    // This could be a trait implementation, but it's not supposed
+    // to be visible outside of this crate.
+    pub(crate) fn into_iter(self) -> ExpressionIterator {
+        ExpressionIterator {
+            internal_iterator: self.exprs.into_iter()
+        }
+    }
+}
+pub(crate) struct ExpressionRefIterator<'a> {
+    internal_iterator: ::std::slice::Iter<'a, Expr>,
+}
+impl<'a> Iterator for ExpressionRefIterator<'a> {
+    type Item = &'a Expr;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.internal_iterator.next()
+    }
+}
+pub(crate) struct ExpressionIterator {
+    internal_iterator: ::std::vec::IntoIter<Expr>,
+}
+impl Iterator for ExpressionIterator {
+    type Item = Expr;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.internal_iterator.next()
+    }
+}
 
 fn is_dec_digit(c: char) -> bool {
     c.is_digit(10)
@@ -249,7 +286,7 @@ fn dice(input: &str) -> PResult<&str, Expression, InvalidDie> {
     for (sign, term) in terms {
         expression.push(Expr { term: trip!(input, term), sign })
     }
-    okay(input, expression)
+    okay(input, Expression::new(expression))
 }
 
 /// Wrap up getting errors from parsing a dice expression.

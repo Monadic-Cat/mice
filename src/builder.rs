@@ -61,7 +61,7 @@ impl RollBuilder {
         for x in tuples {
             expression.push(Expr::try_from(*x)?)
         }
-        self.expression = Some(expression);
+        self.expression = Some(Expression::new(expression));
         Ok(self)
     }
     #[allow(dead_code)]
@@ -113,7 +113,7 @@ impl<R: RngCore> RollBuilderWithRng<R> {
         for x in tuples {
             expression.push(Expr::try_from(*x)?)
         }
-        self.expression = Some(expression);
+        self.expression = Some(Expression::new(expression));
         Ok(self)
     }
     #[allow(dead_code)]
