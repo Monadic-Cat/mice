@@ -153,7 +153,7 @@ impl Expression {
     // to be visible outside of this crate.
     pub(crate) fn into_iter(self) -> ExpressionIterator {
         ExpressionIterator {
-            internal_iterator: self.exprs.into_iter()
+            internal_iterator: self.exprs.into_iter(),
         }
     }
 }
