@@ -253,13 +253,11 @@ fn whitespace(input: &str) -> IResult<&str, &str> {
 }
 
 fn separator(input: &str) -> IResult<&str, Sign> {
-    let (input, t) = tuple((many0(whitespace), operator, many0(whitespace)))(input)?;
-    Ok((input, t.1))
+    tuple((many0(whitespace), operator, many0(whitespace)))(input).map(|(i, (_, op, _))| (i, op))
 }
 
 fn constant(input: &str) -> IResult<&str, ConstantTerm> {
-    let i = integer(input)?;
-    Ok((i.0, ConstantTerm { value: i.1 }))
+    integer(input).map(|(i, int)| (i, ConstantTerm { value: int }))
 }
 
 // /// Use like this, where map is a HashMap: `|x| variable(map, x)`
