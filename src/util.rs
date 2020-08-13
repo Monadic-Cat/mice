@@ -1,7 +1,7 @@
 //! Nice to have utilities that aren't core to dice
 //! manipulation itself, just handy for some reason.
 #[cfg(feature = "thread_rng")]
-use crate::{roll_tuples, tuple_vec, parse::{Expression, Expr, Term}};
+use crate::parse::{Expression, Term};
 use crate::{Error, ExpressionResult, parse::ParseError};
 use thiserror::Error;
 
@@ -28,7 +28,7 @@ type UResult = Result<ExpressionResult, UtilError>;
 #[cfg(feature = "thread_rng")]
 fn exceeds_cap(dice: &Expression, cap: i64) -> bool {
     let mut roll_count = 0;
-    for Expr { term, .. } in dice.iter() {
+    for term in dice.terms() {
         match term {
             Term::Dice(d) => if d.size > 1 {
                 roll_count += d.number;
