@@ -1,4 +1,4 @@
-//! Types and parser combinators for dice expressions.
+//! Types and parsers for dice expressions.
 use crate::post::FormatOptions;
 use nom::{
     branch::alt,
@@ -261,7 +261,8 @@ fn operator(input: &str) -> IResult<&str, Sign> {
     alt((addition, subtraction))(input)
 }
 
-fn whitespace(input: &str) -> IResult<&str, &str> {
+/// Nom parser for whitespace
+pub fn whitespace(input: &str) -> IResult<&str, &str> {
     alt((tag(" "), tag("\t")))(input)
 }
 
