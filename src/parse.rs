@@ -23,7 +23,7 @@ pub enum ParseError {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub(crate) struct DiceTerm {
+pub struct DiceTerm {
     /// Negative numbers of dice are
     /// incorrect, but matching integer
     /// sizes is helpful.
@@ -60,7 +60,7 @@ impl Display for ConstantTerm {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub(crate) enum Term {
+pub enum Term {
     Dice(DiceTerm),
     Constant(i64),
 }
@@ -157,6 +157,9 @@ impl Expression {
             internal_iterator: self.exprs.into_iter(),
         }
     }
+    pub fn terms(&self) -> TermIter {
+        TermIter { internal_iterator: self.iter() }
+    }
 }
 pub(crate) struct ExpressionRefIterator<'a> {
     internal_iterator: ::std::slice::Iter<'a, Expr>,
@@ -174,6 +177,15 @@ impl Iterator for ExpressionIterator {
     type Item = Expr;
     fn next(&mut self) -> Option<Self::Item> {
         self.internal_iterator.next()
+    }
+}
+pub struct TermIter<'a> {
+    internal_iterator: ExpressionRefIterator<'a>,
+}
+impl<'a> Iterator for TermIter<'a> {
+    type Item = &'a Term;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.internal_iterator.next().map(|x| &x.term)
     }
 }
 
