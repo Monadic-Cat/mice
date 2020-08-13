@@ -1,3 +1,4 @@
+//! Types and parser combinators for dice expressions.
 use crate::post::FormatOptions;
 use nom::{
     branch::alt,
@@ -274,7 +275,8 @@ fn term(input: &str) -> PResult<&str, Term, InvalidDie> {
     ))(input)
 }
 
-fn dice(input: &str) -> PResult<&str, Expression, InvalidDie> {
+/// Nom parser for a dice expression.
+pub fn dice(input: &str) -> PResult<&str, Expression, InvalidDie> {
     // [(+/-)] dice ((+/-) dice)*
     let (input, (sign, term, terms)) =
         tuple((opt(separator), term, many0(tuple((separator, term)))))(input)?;

@@ -36,7 +36,7 @@ mod expose;
 #[cfg(feature = "thread_rng")]
 pub use expose::roll_tuples;
 pub use expose::tuple_vec;
-mod parse;
+pub mod parse;
 use parse::{DiceTerm, Expr, Sign, Term};
 pub use parse::ParseError;
 pub mod builder;
