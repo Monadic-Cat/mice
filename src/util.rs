@@ -1,7 +1,7 @@
 //! Nice to have utilities that aren't core to dice
 //! manipulation itself, just handy for some reason.
 #[cfg(feature = "thread_rng")]
-use crate::{roll_tuples, tuple_vec};
+use crate::{roll_tuples, tuple_vec, parse::{Expression, Expr, Term}};
 use crate::{Error, ExpressionResult, parse::ParseError};
 use thiserror::Error;
 
@@ -25,28 +25,57 @@ impl From<ParseError> for UtilError {
 
 type UResult = Result<ExpressionResult, UtilError>;
 
-/// For providing access to mice to irresponsible users
 #[cfg(feature = "thread_rng")]
-pub fn roll_capped(input: &str, cap: i64) -> UResult {
-    let dice: Vec<(i64, i64)> = tuple_vec(input)?;
+fn exceeds_cap(dice: &Expression, cap: i64) -> bool {
     let mut roll_count = 0;
-    for d in dice.iter() {
-        if d.1 > 1 {
-            roll_count += d.0;
-        } else {
+    for Expr { term, .. } in dice.iter() {
+        match term {
+            Term::Dice(d) => if d.size > 1 {
+                roll_count += d.number;
+            } else {
+                roll_count += 1;
+            },
             // This branch only saves time
             // in the worst case - when there's
             // a truly obscene number of terms.
-            roll_count += 1;
+            Term::Constant(_) => roll_count += 1,
         }
         // Prevent worst case performance
         if roll_count > cap {
-            break;
+            return true;
         }
     }
-    if roll_count > cap {
-        Err(UtilError::ExceededCap)
+    roll_count > cap
+}
+
+#[cfg(feature = "thread_rng")]
+pub struct ExceededCap;
+
+#[cfg(feature = "thread_rng")]
+impl From<ExceededCap> for UtilError {
+    fn from(_: ExceededCap) -> Self {
+        Self::ExceededCap
+    }
+}
+
+#[cfg(feature = "thread_rng")]
+pub fn roll_exp_capped(dice: Expression, cap: i64) ->
+    Result<Result<ExpressionResult, crate::Error>, ExceededCap>
+{
+    if !exceeds_cap(&dice, cap) {
+        Ok(crate::roll_expr_iter_with(&mut rand::thread_rng(), dice.into_iter()))
     } else {
-        Ok(roll_tuples(&dice)?)
+        Err(ExceededCap)
+    }
+}
+
+/// For providing access to mice to irresponsible users
+#[cfg(feature = "thread_rng")]
+pub fn roll_capped(input: &str, cap: i64) -> UResult {
+    let dice = crate::parse::wrap_dice(input)?;
+    match roll_exp_capped(dice, cap) {
+        Ok(Ok(x)) => Ok(x),
+        Ok(Err(e)) => Err(e.into()),
+        Err(e) => Err(e.into()),
     }
 }
