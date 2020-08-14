@@ -50,6 +50,12 @@ impl DiceTerm {
             Ok(DiceTerm { number, size })
         }
     }
+    pub fn count(&self) -> u64 {
+        self.number as _
+    }
+    pub fn sides(&self) -> u64 {
+        self.size as _
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -79,7 +85,7 @@ impl Display for Term {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) enum Sign {
+pub enum Sign {
     Positive,
     Negative,
 }
@@ -165,6 +171,13 @@ impl Expression {
     pub fn terms(&self) -> TermIter {
         TermIter { internal_iterator: self.iter() }
     }
+    pub fn roll_with<R: ::rand::Rng>(&self, rng: &mut R) -> Result<crate::ExpressionResult, crate::Error> {
+        crate::roll_expr_iter_with(rng, self.iter().copied())
+    }
+    #[cfg(feature = "thread_rng")]
+    pub fn roll(&self) -> crate::EResult {
+        self.roll_with(&mut ::rand::thread_rng())
+    }
 }
 pub(crate) struct ExpressionRefIterator<'a> {
     internal_iterator: ::std::slice::Iter<'a, Expr>,
@@ -198,7 +211,14 @@ fn is_dec_digit(c: char) -> bool {
     c.is_digit(10)
 }
 
-fn integer(input: &str) -> IResult<&str, i64> {
+/// Parser for an effectively 63-bit unsigned integer.
+///
+/// This is useful because we represent signs separately
+/// from the dice they might be seen as attached to.
+/// This is due to a semantic difference.
+/// e.g., In the real world, you don't have negative four dice.
+/// You subtract the result of four dice.
+pub fn integer(input: &str) -> IResult<&str, i64> {
     let (input, int) = take_while1(is_dec_digit)(input)?;
     // Pretend to be a 63 bit unsigned integer.
     let i = match int.parse::<i64>() {
@@ -263,6 +283,17 @@ fn subtraction(input: &str) -> IResult<&str, Sign> {
 }
 
 fn operator(input: &str) -> IResult<&str, Sign> {
+    alt((addition, subtraction))(input)
+}
+
+/// Parser for a `+` or `-` sign.
+pub fn sign(input: &str) -> IResult<&str, Sign> {
+    // While currently equivalent to `operator`,
+    // the idea of a sign will never change, whilst `operator`
+    // may be extended to recognize other operators,
+    // which would break someone who just wants
+    // a positive or negative sign.
+    // TL;DR: Arithmetic != Sign
     alt((addition, subtraction))(input)
 }
 

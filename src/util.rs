@@ -48,6 +48,42 @@ fn exceeds_cap(dice: &Expression, cap: i64) -> bool {
     roll_count > cap
 }
 
+mod private {
+    pub trait Sealed {}
+    impl Sealed for crate::parse::Expression {}
+}
+
+/// An extension trait for `Expression`.
+/// The idea here is to provide convenience methods
+/// that could eventually be implemented solely in terms of public API.
+///
+/// This trait is sealed. It cannot be implemented outside this crate.
+pub trait ExpressionExt: private::Sealed {
+    /// Counts the number of evaluation steps
+    /// it will take to compute a result of an expression,
+    /// and returns whether that sum exceeds the given `cap`.
+    ///
+    /// Constant terms take one step, dice terms take one step for each die.
+    /// An `Nd1` dice term counts as a constant term for the purpose of this sum.
+    fn exceeds_cap(&self, cap: i64) -> bool;
+}
+impl ExpressionExt for Expression {
+    // Note that this method does not necessarily iterate over the whole expression.
+    // In the case that the expression exceeds the given cap,
+    // this method will return immediately upon discovering that.
+    // Still, that does not make this suitable for dealing with truly absurd
+    // sizes of untrusted input.
+    // One might want integration with the parser for early termination, in such a case.
+    // In my case, parsing and evaluating commands from Discord messages,
+    // I know that the inputs I handle will not be large enough for this to matter.
+    // (Due to Discord messages being limited to a maximum of 2k bytes.)
+    // I would consider merging a PR that adds such functionality, if anyone is interested
+    // in implementing it.
+    fn exceeds_cap(&self, cap: i64) -> bool {
+        exceeds_cap(self, cap)
+    }
+}
+
 #[cfg(feature = "thread_rng")]
 pub struct ExceededCap;
 
