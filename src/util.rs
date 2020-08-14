@@ -85,6 +85,8 @@ impl ExpressionExt for Expression {
 }
 
 #[cfg(feature = "thread_rng")]
+#[derive(Error, Debug)]
+#[error("tried to DOS me.")]
 pub struct ExceededCap;
 
 #[cfg(feature = "thread_rng")]
