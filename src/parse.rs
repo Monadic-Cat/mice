@@ -179,6 +179,13 @@ impl Expression {
     pub fn roll(&self) -> crate::EResult {
         self.roll_with(&mut ::rand::thread_rng())
     }
+    /// Nom parser for an `Expression`.
+    ///
+    /// This is the same as `parse::dice`,
+    /// provided here as well to help discoverability.
+    pub fn parse(input: &str) -> IResult<&str, Result<Self, InvalidDie>> {
+        dice(input)
+    }
 }
 pub(crate) struct ExpressionRefIterator<'a> {
     internal_iterator: ::std::slice::Iter<'a, Expr>,
