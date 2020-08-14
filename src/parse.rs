@@ -149,6 +149,7 @@ impl Display for Expr {
     }
 }
 
+#[derive(Debug)]
 pub struct Expression {
     exprs: Vec<Expr>,
 }
