@@ -31,6 +31,11 @@ pub struct DiceTerm {
     /// Negative dice sizes are nonsense,
     /// but matching integer sizes are helpful.
     pub(crate) size: i64,
+    // In particular, a proof we present in
+    // `crate::eval_term_with` is only valid
+    // due to our storing these things as
+    // signed integer types,
+    // despite their always being positive.
 }
 impl DiceTerm {
     /// Creation of a `Die` may fail if:
