@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
  - `wasm_bindgen` on `FormatOptions` and `.format` on `ExpressionResult`.
+ - Exposed the `parse` module.
+ - ZST fields on `Error`. More specific error types.
 ### Changed
  - `tuple_vec` is now exposed regardless of the `thread_rng` feature being enabled or not.
+ - Refined returned error type for `builder::RollBuilder*::with_tuples`.
 
 ## [0.8.0] - 2020-04-03
 ### Changed
