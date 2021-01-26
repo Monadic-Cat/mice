@@ -1,6 +1,8 @@
-[![Build Status](https://travis-ci.org/Monadic-Cat/mice.svg?branch=master)](https://travis-ci.org/Monadic-Cat/mice)
+# Archived
+`mice` has been merged into the project I wrote it for: [mbot](https://github.com/Monadic-Cat/mbot).
+I intend to publish further versions, if any, under the AGPLv3+.
+
 [![docs.rs](https://docs.rs/mice/badge.svg)](https://docs.rs/mice/)
-![License](https://img.shields.io/crates/l/mice)
 
 # mice, messing with dice
 
